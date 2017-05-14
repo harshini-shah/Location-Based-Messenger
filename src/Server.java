@@ -22,42 +22,22 @@ public class Server {
 			// Get the input and output streams for the socket
 			ObjectInputStream in = new ObjectInputStream(client.getInputStream());
 			ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
-
-			// The server asks the client the email id
-			String requestUsername = "Please enter your email id connected with the TIPPERs system";
-			out.writeObject(requestUsername);
-			String userEmail = "";
-			String password = "";
-
-			try {
-				// Reads the userEmail from the socket
-				userEmail = (String) in.readObject();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
+			 
+			Utils.Message abc = null; /*Recieve from the Client*/
+			
+			if(abc.what == 1) {
+				/*Handle a Login Req*/
+				// TODO : Check that the user id and passwords match (Database)
+				// Spawn a thread to check for pending requests
+				/* No need to spawn a new thread specifically, I believe we can
+				 * simply run a small search here; and then spawn a Probe threa */
+				String userEmail = abc.field1;
+				ClientThread clientThread = new ClientThread(client, userEmail);
+			} else if (abc.what == 2) {
+				/*handle sending a new message Req*/
+			} else if (abc.what == 3) {
+				/*handle log out Req*/
 			}
-
-			// TODO : Should check from the database that the user email is a
-			// registered one
-
-			// Asks client for password
-			String requestPassword = "Please enter your password";
-			out.writeObject(requestPassword);
-
-			try {
-				// Reads the Password from the socket
-				password = (String) in.readObject();
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-			}
-
-			// TODO : Check that the user id and passwords match (Database)
-
-			// Control should reach here only if all conditions satisfied
-
-			// Spawn a thread to check for pending requests
-			/* No need to spawn a new thread specifically, I believe we can
-			 * simply run a small search here; and then spawn a Probe threa */
-			ClientThread clientThread = new ClientThread(client, userEmail);
 
 			// TODO : figure out when to shut the server
 		}

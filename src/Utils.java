@@ -3,6 +3,19 @@ import java.util.HashMap;
 
 public class Utils {
 
+	/*Message object to be used, make this serialized*/
+	public static class Message {
+		int what;
+		String field1, field2, field3;
+
+		Message(int w, String f1, String f2, String f3) {
+			what = w;
+			field1 = f1;
+			field2 = f2;
+			field3 = f3;
+		}
+	}
+
 	private static HashMap<String, ArrayList<QueueObject>> messageQueueBank = null;
 	// private static Lock messageQueueRead = null, messageQueueWrite = null;
 
