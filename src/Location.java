@@ -6,13 +6,34 @@
  * instance of this class that can be used to check if the user is indeed at the specified location. 
  */
 public class Location {
-    private int roomNum;
+	private String roomNum;
 
-    public int getRoomNum() {
-        return roomNum;
-    }
+	/* Have added this for future Scalability */
+	private boolean isGPS = false;
 
-    public void setRoomNum(int roomNum) {
-        this.roomNum = roomNum;
-    }
+	Location (String roomNum) {
+		/*To be used for DBH*/
+		this.roomNum = roomNum;
+	}
+	
+	Location () {
+		/*To be used for GPS*/
+		isGPS = true;
+	}
+
+	public String getRoomNum() {
+		return roomNum;
+	}
+
+	/* This is to check if two given locations are same or not. */
+	@Override
+	public boolean equals(Object obj) {
+		return isEqualImpl((Location) obj);
+	}
+
+	public boolean isEqualImpl(Location loc) {
+		if (isGPS)
+			return false;
+		return loc.roomNum.equals(roomNum);
+	}
 }
