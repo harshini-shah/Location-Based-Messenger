@@ -44,7 +44,11 @@ public class Utils {
 	}
 
 	public static int getMessageIdFor(String message) {
-		/*To implement Message bank here*/
+		/* To implement Message bank here */
 		return -1;
+	}
+
+	public static String getMessageForId(int id) {
+		return "dummy";
 	}
 }
