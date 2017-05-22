@@ -23,6 +23,7 @@ public class Utils {
 
 	public static void logUserOff(String email) {
 		nullCheck();
+		ProbeManager.closeProbeForUser(email);
 		onlineUsers.remove(email);
 	}
 
@@ -53,7 +54,27 @@ public class Utils {
 		queue.add(obj);
 	}
 
-	public static ArrayList<QueueObject> getQueueForUser(String userEmail) {
+	public static boolean messageQueueForUserExists(String userEmail) {
+		return messageQueueBank.get(userEmail) != null && !messageQueueBank.get(userEmail).isEmpty();
+	}
+
+	public static boolean deliverAllPossibleMessages(String userEmail) {
+		boolean delivered = false;
+		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
+		Location currentLocation = getCurrentLocationForUser(userEmail);
+		for (int i = 0; i < messageQueue.size();) {
+			QueueObject obj = messageQueue.get(i);
+			if (obj.getLocation().equals(currentLocation)) {
+				messageQueue.remove(i);
+				delivered = true;
+				/* Logic to deliver Message to client */
+			} else
+				i++;
+		}
+		return delivered;
+	}
+
+	private static ArrayList<QueueObject> getQueueForUser(String userEmail) {
 		/*
 		 * Need to implement Read/Write locks for this Reference -
 		 * https://www.javacodegeeks.com/2012/04/java-concurrency-with-readwritelock.html

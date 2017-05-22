@@ -68,7 +68,7 @@ public class Server {
 				Utils.logUserOn(userEmail, new User(userEmail));
 
 				// Spawn a thread to check the queue if it exists
-				if (Utils.getQueueForUser(userEmail) != null && !Utils.getQueueForUser(userEmail).isEmpty()) {
+				if (Utils.messageQueueForUserExists(userEmail)) {
 					ClientThread clientThread = new ClientThread(client, userEmail);
 				} else {
 					String noNewMessagesMsg = "You do not have any pending messages at this time";
@@ -88,7 +88,7 @@ public class Server {
 
 				} else {
 					Utils.queueMessage(msg.receiverEmail, msg.messageText, msg.location);
-					ProbeThread.startThreadFor(msg.receiverEmail);
+					ProbeManager.startProbeFor(msg.receiverEmail);
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
@@ -98,9 +98,6 @@ public class Server {
 				}
 
 				Utils.logUserOff(userEmail);
-
-				// Check if any probe threads are alive that belong to this user
-				// & kill them
 			}
 
 			// TODO : figure out when to shut the server
