@@ -1,5 +1,4 @@
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class ClientThread extends Thread {
 	private Socket socket;
@@ -13,7 +12,7 @@ public class ClientThread extends Thread {
 	@Override
 	public void run() {
 		/* Implement Read/Write Lock for Message Queue here */
-		if (Utils.messageQueueForUserExists(userEmail)) {
+		if (!Utils.messageQueueForUserExists(userEmail)) {
 			handleExit();
 			return;
 		}

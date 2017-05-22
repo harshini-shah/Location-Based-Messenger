@@ -85,7 +85,7 @@ public class Utils {
 	public static Location getCurrentLocationForUser(String userEmail) {
 		/* This is dummy, we need to get location from TIPPERS at this point */
 		nullCheck();
-		return onlineUsers.get(userEmail).getCurrLocation();
+		return new Location("XYZ");
 	}
 
 	public static int getMessageIdFor(String message) {
