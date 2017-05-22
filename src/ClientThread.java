@@ -24,7 +24,7 @@ public class ClientThread extends Thread {
 			QueueObject obj = messageQueue.get(i);
 			if (obj.getLocation().equals(currentLocation)) {
 				messageQueue.remove(i);
-				/* Logic to deliver Message to client */
+				 /*Logic to deliver Message to client*/ 
 			} else
 				i++;
 		}
