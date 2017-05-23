@@ -1,5 +1,4 @@
 import java.net.Socket;
-import java.util.ArrayList;
 
 public class ClientThread extends Thread {
 	private Socket socket;
@@ -13,21 +12,11 @@ public class ClientThread extends Thread {
 	@Override
 	public void run() {
 		/* Implement Read/Write Lock for Message Queue here */
-		ArrayList<QueueObject> messageQueue = Utils.getQueueForUser(userEmail);
-		if (messageQueue == null || messageQueue.isEmpty()) {
+		if (!Utils.messageQueueForUserExists(userEmail)) {
 			handleExit();
 			return;
 		}
-
-		Location currentLocation = Utils.getCurrentLocationForUser(userEmail);
-		for (int i = 0; i < messageQueue.size();) {
-			QueueObject obj = messageQueue.get(i);
-			if (obj.getLocation().equals(currentLocation)) {
-				messageQueue.remove(i);
-				/* Logic to deliver Message to client */
-			} else
-				i++;
-		}
+		Utils.deliverAllPossibleMessages(userEmail);
 	}
 
 	public void handleExit() {
