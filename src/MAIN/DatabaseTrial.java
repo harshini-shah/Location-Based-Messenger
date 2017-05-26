@@ -1,3 +1,4 @@
+package MAIN;
 import java.sql.*;
 
 public class DatabaseTrial {

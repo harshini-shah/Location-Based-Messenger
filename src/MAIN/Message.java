@@ -1,3 +1,4 @@
+package MAIN;
 import java.io.Serializable;
 
 /* 
@@ -13,21 +14,16 @@ import java.io.Serializable;
  * TODO : Assuming single recipient - have to add support for multiple users.
  */
 public class Message implements Serializable {
-    
-    private static final long serialVersionUID = 42L;
-    
-    public enum MsgType {LOGIN_MSG, LOGOFF_MSG, SEND_MSG};
-    
-    MsgType msgType;
-    String userEmail, password, messageText, receiverEmail;
-    Location location;
 
-    Message(MsgType msgType, String userEmail, String password, String receiverEmail, String messageText, Location loc) {
-        this.msgType = msgType;
-        this.userEmail = userEmail;
-        this.password = password;
-        this.receiverEmail = receiverEmail;
-        this.messageText = messageText;
-        this.location = loc;
-    }
+	private static final long serialVersionUID = 42L;
+
+	public enum MsgType {
+		LOGIN_MSG, LOGOFF_MSG, SEND_MSG
+	};
+
+	public MsgType msgType;
+	public String field1; /* User Email */
+	public String field2; /* User Password *//* Receiver Email *//* Authentication */
+	public String field3; /* Message Text *//* Reply Messages */
+	public String field4; /* Location */
 }

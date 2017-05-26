@@ -1,3 +1,4 @@
+package MAIN;
 /*
  * This class provides methods to set up the database.
  */

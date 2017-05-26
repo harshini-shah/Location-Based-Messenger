@@ -1,3 +1,4 @@
+package MAIN;
 /*
  * This is the location that can be specified by the user. For now, the user can only specify a string
  * which will represent the room number of Donald Bren. Later, this class can be modified by giving the

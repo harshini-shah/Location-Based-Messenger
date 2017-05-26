@@ -1,3 +1,4 @@
+package MAIN;
 /*
  * TODO : Add some field which can be used to connect to the user later. (while he is still logged on) 
  */

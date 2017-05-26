@@ -1,3 +1,4 @@
+package MAIN;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -45,7 +46,7 @@ public class Server {
 				 * connect with it later (if someone sends it a message)
 				 */
 
-				userEmail = msg.userEmail;
+				userEmail = msg.field1;
 				// Check that the user email is there in the DB
 				if (!registeredUser(userEmail)) {
 					String invalidUserMsg = "ERROR: Email ID Not Registered on System";
@@ -54,7 +55,7 @@ public class Server {
 					continue;
 				}
 
-				String password = msg.password;
+				String password = msg.field2;
 				// Check that the passwords match
 				if (!checkPassword(userEmail, password)) {
 					String wrongPasswordMsg = "ERROR: Wrong Password";
@@ -77,27 +78,26 @@ public class Server {
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
 				/* handle sending a new message */
-				userEmail = msg.userEmail;
+				userEmail = msg.field1;
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot send a message");
 				}
 
 				// Check if the user is online and the location is a match
-				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(msg.location)) {
+				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
 					// Deliver the message straight away
 
 				} else {
-					Utils.queueMessage(msg.receiverEmail, msg.messageText, msg.location);
-					ProbeManager.startProbeFor(msg.receiverEmail);
+					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4));
+					ProbeManager.startProbeFor(msg.field2);
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
-				userEmail = msg.userEmail;
+				userEmail = msg.field2;
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
-				}
-
-				Utils.logUserOff(userEmail);
+				} else
+					Utils.logUserOff(userEmail);
 			}
 
 			// TODO : figure out when to shut the server

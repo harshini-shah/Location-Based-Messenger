@@ -1,3 +1,5 @@
+package MAIN;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -6,13 +8,12 @@ public class Utils {
 
 	private static Map<String, User> onlineUsers;
 	private static HashMap<String, ArrayList<QueueObject>> messageQueueBank = null;
-	// private static Lock messageQueueRead = null, messageQueueWrite = null;
 
 	public static void nullCheck() {
 		if (onlineUsers == null)
 			onlineUsers = new HashMap<String, User>();
 
-		if(messageQueueBank == null)
+		if (messageQueueBank == null)
 			messageQueueBank = new HashMap<String, ArrayList<QueueObject>>();
 	}
 
@@ -33,13 +34,13 @@ public class Utils {
 	}
 
 	public static int queueMessage(String userEmail, String message, Location loc) {
-	    int id = getMessageIdFor(message);
-	    queueMessage(userEmail, id, loc);
-	    return id;
+		int id = getMessageIdFor(message);
+		queueMessage(userEmail, id, loc);
+		return id;
 	}
-	
+
 	public static void queueMessage(String userEmail, int id, Location loc) {
-	    
+		QueueObject obj = new QueueObject(id, loc);
 		ArrayList<QueueObject> queue = null;
 		if (messageQueueBank.get(userEmail) == null)
 			queue = new ArrayList<QueueObject>();
@@ -48,9 +49,9 @@ public class Utils {
 
 		/*
 		 * Need to implement Read/Write locks for this Reference -
-		 * https://www.javacodegeeks.com/2012/04/java-concurrency-with-readwritelock.html
+		 * https://www.javacodegeeks.com/2012/04/java-concurrency-with-
+		 * readwritelock.html
 		 */
-		QueueObject obj = new QueueObject(id, loc);
 		queue.add(obj);
 	}
 
@@ -67,7 +68,8 @@ public class Utils {
 			if (obj.getLocation().equals(currentLocation)) {
 				messageQueue.remove(i);
 				delivered = true;
-				/* Logic to deliver Message to client */
+				Message msg = null; /* TODO: Get Message from Harshini */
+				Mercury.addRequest(msg);
 			} else
 				i++;
 		}
@@ -77,7 +79,8 @@ public class Utils {
 	private static ArrayList<QueueObject> getQueueForUser(String userEmail) {
 		/*
 		 * Need to implement Read/Write locks for this Reference -
-		 * https://www.javacodegeeks.com/2012/04/java-concurrency-with-readwritelock.html
+		 * https://www.javacodegeeks.com/2012/04/java-concurrency-with-
+		 * readwritelock.html
 		 */
 		return messageQueueBank.get(userEmail);
 	}
