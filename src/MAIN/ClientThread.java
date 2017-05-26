@@ -1,3 +1,4 @@
+package MAIN;
 import java.net.Socket;
 
 public class ClientThread extends Thread {

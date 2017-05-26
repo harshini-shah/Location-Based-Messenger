@@ -11,7 +11,7 @@ import java.net.Socket;
 public class TestSocketClient {
 
 public static void main(String [] args) {
-   String serverName = "10.11.228.111";//args[0];
+   String serverName = "192.168.0.7";//args[0];
    int port = 6066;//nteger.parseInt(args[1]);
    try {
       System.out.println("Connecting to " + serverName + " on port " + port);

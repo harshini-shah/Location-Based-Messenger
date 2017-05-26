@@ -1,3 +1,4 @@
+package MAIN;
 /*
  * Each user has a queue of pending messages that have to be delivered - each object in the queue
  * is an instance of this class. It contains the ID associated with the message (using which the contents
