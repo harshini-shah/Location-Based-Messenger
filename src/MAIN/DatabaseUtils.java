@@ -9,7 +9,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
 
-public class DatabaseInitialization {
+public class DatabaseUtils {
     protected static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
     protected static final String DB_URL = "jdbc:mysql://localhost/";
     
