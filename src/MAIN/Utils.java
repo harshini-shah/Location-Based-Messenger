@@ -7,6 +7,7 @@ import java.util.Map;
 public class Utils {
 
 	private static Map<String, User> onlineUsers;
+	private static HashMap<String, Object> mutexBank = null;
 	private static HashMap<String, ArrayList<QueueObject>> messageQueueBank = null;
 
 	public static void nullCheck() {
@@ -15,6 +16,9 @@ public class Utils {
 
 		if (messageQueueBank == null)
 			messageQueueBank = new HashMap<String, ArrayList<QueueObject>>();
+
+		if (mutexBank == null)
+			mutexBank = new HashMap<String, Object>();
 	}
 
 	public static boolean isUserOnline(String email) {
@@ -42,17 +46,21 @@ public class Utils {
 	public static void queueMessage(String userEmail, int id, Location loc) {
 		QueueObject obj = new QueueObject(id, loc);
 		ArrayList<QueueObject> queue = null;
-		if (messageQueueBank.get(userEmail) == null)
+		Object messageQueueMutex = null;
+		if (messageQueueBank.get(userEmail) == null) {
 			queue = new ArrayList<QueueObject>();
-		else
-			queue = messageQueueBank.get(userEmail);
+			messageQueueBank.put(userEmail, queue);
+			messageQueueMutex = new Object();
+			mutexBank.put(userEmail, messageQueueMutex);
+		} else {
+			queue = getQueueForUser(userEmail);
+			messageQueueMutex = getMutexForUser(userEmail);
+		}
 
-		/*
-		 * Need to implement Read/Write locks for this Reference -
-		 * https://www.javacodegeeks.com/2012/04/java-concurrency-with-
-		 * readwritelock.html
-		 */
-		queue.add(obj);
+		synchronized (messageQueueMutex) {
+			queue.add(obj);
+			messageQueueMutex.notifyAll();
+		}
 	}
 
 	public static boolean messageQueueForUserExists(String userEmail) {
@@ -62,18 +70,33 @@ public class Utils {
 	public static boolean deliverAllPossibleMessages(String userEmail) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
+		Object messageQueueMutex = getMutexForUser(userEmail);
 		Location currentLocation = getCurrentLocationForUser(userEmail);
-		for (int i = 0; i < messageQueue.size();) {
-			QueueObject obj = messageQueue.get(i);
-			if (obj.getLocation().equals(currentLocation)) {
-				messageQueue.remove(i);
-				delivered = true;
-				Message msg = null; /* TODO: Get Message from Harshini */
-				Mercury.addRequest(msg);
-			} else
-				i++;
+		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
+
+		synchronized (messageQueueMutex) {
+			for (int i = 0; i < messageQueue.size();) {
+				QueueObject obj = messageQueue.get(i);
+				if (obj.getLocation().equals(currentLocation)) {
+					messageIdList.add(messageQueue.remove(i).getMessageID());
+					delivered = true;
+				} else
+					i++;
+			}
+
+			messageQueueMutex.notifyAll();
+		}
+
+		if (delivered) {
+			/* Use MessageID List, to get Messages from harshini */
+			Message msg = null; /* TODO: Get Message from Harshini */
+			Mercury.addRequest(msg);
 		}
 		return delivered;
+	}
+
+	private static Object getMutexForUser(String userEmail) {
+		return mutexBank.get(userEmail);
 	}
 
 	private static ArrayList<QueueObject> getQueueForUser(String userEmail) {
