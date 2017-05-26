@@ -197,6 +197,52 @@ public class DatabaseInitialization {
          }
     }
     
+    public Message getMessage(int id, String receiverEmail) {
+        Message message = new Message();
+        message.field2 = receiverEmail;
+        
+        Connection conn = null;
+        Statement stmt = null;
+        
+        try {
+            Class.forName(JDBC_DRIVER);
+            System.out.println("Connecting to the messenger database...");
+            conn = DriverManager.getConnection(TABLES_URL, USER, PASS);
+            System.out.println("Connected database successfully...");
+            
+            System.out.println("Creating statement...");
+            stmt = conn.createStatement();
+
+            String sql = "SELECT SenderEmail, MessageText FROM TRANSACTIONS" + "WHERE id = " + id;
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                message.field1 = rs.getString("SenderEmail");
+                message.field3 = rs.getString("MessageText");
+            }
+        } catch (SQLException se) {
+            se.printStackTrace();
+         } catch (Exception e) {
+            e.printStackTrace();
+         } finally {
+            try {
+               if (stmt != null) {
+                   conn.close();
+               }
+            } catch (SQLException se) {
+                se.printStackTrace();
+            }
+            
+            try {
+               if (conn != null) {
+                   conn.close();
+               }
+            } catch (SQLException se) {
+               se.printStackTrace();
+            }
+         }
+        return message;
+    }
+    
     /* Deletes the database and the tables from the system so that when the program is run
      * again, everything works.
      */
