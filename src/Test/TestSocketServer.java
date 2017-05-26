@@ -7,7 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 
-import MAIN.DatabaseInitiliazation;
+import MAIN.DatabaseInitialization;
 
 public class TestSocketServer extends Thread {
 	private ServerSocket serverSocket;
@@ -21,7 +21,7 @@ public class TestSocketServer extends Thread {
 		boolean flag = true;
 		while (flag) {
 			try {
-				DatabaseInitiliazation db;
+				DatabaseInitialization db;
 				System.out.println("Waiting for client on port " + serverSocket.getLocalPort() + "...");
 				Socket client = serverSocket.accept();
 
