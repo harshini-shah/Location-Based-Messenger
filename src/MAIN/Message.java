@@ -21,7 +21,7 @@ public class Message implements Serializable {
 		LOGIN_MSG, LOGOFF_MSG, SEND_MSG
 	};
 
-	MsgType msgType;
+	public MsgType msgType;
 	public String field1; /* User Email */
 	public String field2; /* User Password *//* Receiver Email *//* Authentication */
 	public String field3; /* Message Text *//* Reply Messages */
