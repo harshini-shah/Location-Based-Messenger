@@ -16,6 +16,7 @@ public class User {
     public User(String userEmail, InetAddress ipAddress, int port) {
         this.userEmail = userEmail;
         this.ipAddress = ipAddress;
+        this.port = port;
     }
 
     protected Location getCurrLocation() {

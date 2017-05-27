@@ -83,6 +83,7 @@ public class Utils {
 		synchronized (messageQueueMutex) {
 			for (int i = 0; i < messageQueue.size();) {
 				QueueObject obj = messageQueue.get(i);
+				System.out.println("CURR LOCATION FOR " + userEmail + " is " + currentLocation.getRoomNum());
 				if (obj.getLocation().equals(currentLocation)) {
 					messageIdList.add(messageQueue.remove(i).getMessageID());
 					delivered = true;
@@ -128,7 +129,7 @@ public class Utils {
 
 	    // Establish the connection and send the message
 	    try {
-            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, onlineUsers.get(message.field1).port);
+            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, 6068);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             out.writeObject(message);
             out.flush();
