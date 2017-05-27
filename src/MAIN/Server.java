@@ -49,6 +49,13 @@ public class Server {
 				userEmail = msg.field1;
 				// Check that the user email is there in the DB
 				if (!registeredUser(userEmail)) {
+					/**
+					 * CREATE MSG OBJ
+					 * msgType = same as before
+					 * f1 - harshini@uci.edu
+					 * f2 - "FALSE"
+					 * f4 - "ERROR: Email ID Not Registered on System"
+					 */
 					String invalidUserMsg = "ERROR: Email ID Not Registered on System";
 					out.writeObject(invalidUserMsg);
 					client.close();
@@ -59,21 +66,40 @@ public class Server {
 				// Check that the passwords match
 				if (!checkPassword(userEmail, password)) {
 					String wrongPasswordMsg = "ERROR: Wrong Password";
+					/**
+					 * CREATE MSG OBJ
+					 * msgType = same as before
+					 * f1 - harshini@uci.edu
+					 * f2 - "FALSE"
+					 * f4 - "ERROR: Wrong Password"
+					 */
 					out.writeObject(wrongPasswordMsg);
 					client.close();
 					continue;
 				}
 
-				// Add to the set of logged in users after setting the location
-				// TODO : set location
-				Utils.logUserOn(userEmail, new User(userEmail));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getRemoteSocketAddress()));
 
-				// Spawn a thread to check the queue if it exists
 				if (Utils.messageQueueForUserExists(userEmail)) {
+					/**
+					 * CREATE MSG OBJ
+					 * msgType = same as before
+					 * f1 - harshini@uci.edu
+					 * f2 - "TRUE"
+					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
+					 * f4 - "madhur@uci.edu | sharad@uci.edu"
+					 */
 					ClientThread clientThread = new ClientThread(client, userEmail);
 				} else {
-					String noNewMessagesMsg = "You do not have any pending messages at this time";
-					out.writeObject(noNewMessagesMsg);
+					/**
+					 * CREATE MSG OBJ
+					 * msgType = same as before
+					 * f1 - harshini@uci.edu
+					 * f2 - "TRUE"
+					 * f3 - null
+					 * f4 - null
+					 */
+					out.writeObject(msg);
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
@@ -93,7 +119,7 @@ public class Server {
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
-				userEmail = msg.field2;
+				userEmail = msg.field1;
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
 				} else

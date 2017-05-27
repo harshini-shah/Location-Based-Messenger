@@ -15,15 +15,36 @@ import java.io.Serializable;
  */
 public class Message implements Serializable {
 
+	/* From mobile application
+	 * "Hello" from Harshini to Vignesh
+	 * msgType = SEND_MSG
+	 * f1 - harshini@uci.edu
+	 * f2 - vignesh@uci.edu
+	 * f3 - "Hello"
+	 * f4 - DBH 2055
+	 * 
+	 * from mobile application (Harshini is trying TO LOG IN)
+	 * msgType = LOGIN_MSG
+	 * f1 - harshini@uci.edu
+	 * f2 - myPassword
+	 * 
+	 * from mobile application Harshini trying to log off
+	 * msgType = LOG_OFF
+	 * f1 - harshini@uci.edu
+	 * 
+	 * 
+	 * 
+	 * 
+	 * */
 	private static final long serialVersionUID = 42L;
 
 	public enum MsgType {
-		LOGIN_MSG, LOGOFF_MSG, SEND_MSG
+		LOGIN_MSG, LOGOFF_MSG, SEND_MSG, NOTIFICATION
 	};
 
 	public MsgType msgType;
-	public String field1; /* User Email */
-	public String field2; /* User Password *//* Receiver Email *//* Authentication */
-	public String field3; /* Message Text *//* Reply Messages */
-	public String field4; /* Location */
+	public String field1;
+	public String field2;
+	public String field3;
+	public String field4;
 }
