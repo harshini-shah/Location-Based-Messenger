@@ -21,10 +21,12 @@ public class Server {
 		/* Creates a listening */
 	    DBUtils.cleanup();
 	    DBUtils.createDatabase();
+	    DBUtils.populateUsersTable("C:/Users/harshini/Downloads/DummyUsers.csv");
         DBUtils.populateDummyUsersTable("C:/Users/harshini/Downloads/Dummy_users.csv");
         DBUtils.createTransactionsTable();
         
 		ServerSocket server = new ServerSocket(port);
+		server.setSoTimeout(700000);
 
 		while (true) {
 			Socket client = server.accept(); // Accepts connection request from
@@ -139,7 +141,7 @@ public class Server {
 				}
 
 				// Check if the user is online and the location is a match
-				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
+				if (Utils.isUserOnline(userEmail) && DBUtils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
 					// Deliver the message straight away
 				    Utils.sendMessage(msg, true);
 				    client.close();

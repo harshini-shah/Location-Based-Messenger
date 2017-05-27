@@ -73,7 +73,7 @@ public class Utils {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
-		Location currentLocation = getCurrentLocationForUser(userEmail);
+		Location currentLocation = DBUtils.getCurrentLocationForUser(userEmail);
 		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
 
 		synchronized (messageQueueMutex) {
@@ -111,12 +111,6 @@ public class Utils {
 		 */
 		return messageQueueBank.get(userEmail);
 	}
-
-	public static Location getCurrentLocationForUser(String userEmail) {
-		/* This is dummy, we need to get location from TIPPERS at this point */
-		nullCheck();
-		return new Location("XYZ");
-	}
 	
 	/*
 	 * Can be called from two places:
@@ -128,6 +122,7 @@ public class Utils {
 	 */
 	public static void sendMessage(Message message, boolean toReformat) {
 	    if (toReformat) {
+	        message.msgType = Message.MsgType.NOTIFICATION;
 	        String senderEmail = message.field1;
 	        String receiverEmail = message.field2;
 	        message.field4 = senderEmail;

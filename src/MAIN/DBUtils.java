@@ -126,6 +126,7 @@ public class DBUtils {
          }
     }
     
+    
     public static void populateDummyUsersTable(String csvFile) {
         try {
             System.out.println("Creating DUMMY_USERS table in given database...");
@@ -223,6 +224,24 @@ public class DBUtils {
          } catch (Exception e) {
             e.printStackTrace();
          }
+    }
+    
+    public static Location getCurrentLocationForUser(String userEmail) {
+        /* This is dummy, we need to get location from TIPPERS at this point */
+        try {
+            stmt = conn.createStatement();
+            String findLoc = "SELECT Location FROM DUMMY_USERS " + "WHERE UserEmail = '" + userEmail + "'";
+            ResultSet rs = stmt.executeQuery(findLoc);
+            while (rs.next()) {
+                return new Location(rs.getString("Location"));
+            }
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return new Location("XXX");
     }
     
     public static int addTransaction(Message message) {
