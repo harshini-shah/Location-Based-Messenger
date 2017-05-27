@@ -97,6 +97,7 @@ public class Server {
 
 				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), client.getPort()));
 
+				boolean sendEmptyAffirmation = false;
 				if (Utils.messageQueueForUserExists(userEmail)) {
 					/**
 					 * CREATE MSG OBJ
@@ -107,26 +108,27 @@ public class Server {
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
 					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false);
-					Message reply = null;//DatabaseInitialization.getMessage(messageIdList, userEmail);
-					reply.msgType = Message.MsgType.LOGIN_MSG;
-					reply.field2 = "TRUE";
-					out.writeObject(reply);
-					client.close();
-				} else {
+					if (messageIdList.isEmpty())
+						sendEmptyAffirmation = true;
+					else {
+						Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
+						reply.msgType = Message.MsgType.LOGIN_MSG;
+						reply.field2 = "TRUE";
+						out.writeObject(reply);
+						client.close();
+					}
+				} else
+					sendEmptyAffirmation = true;
+
+				if (sendEmptyAffirmation) {
 					/**
-					 * CREATE MSG OBJ
-					 * msgType = same as before
-					 * f1 - harshini@uci.edu
-					 * f2 - "TRUE"
-					 * f3 - null
+					 * CREATE MSG OBJ msgType = same as before
+					 * f1 - harshini@uci.edu 
+					 * f2 - "TRUE" 
+					 * f3 - null 
 					 * f4 - null
 					 */
-				    Message message = new Message();
-                    message.msgType = msg.msgType;
-                    message.field1 = userEmail;
-                    message.field2 = "TRUE";
-                    out.writeObject(message);
-                    
+					out.writeObject(msg);
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
