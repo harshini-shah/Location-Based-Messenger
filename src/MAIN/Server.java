@@ -86,7 +86,7 @@ public class Server {
                     out.writeObject(message);
 					client.close();
 					
-					// Disconnect the user
+					Utils.disconnect(userEmail);
 					continue;
 				}
 
@@ -106,6 +106,7 @@ public class Server {
 					reply.msgType = Message.MsgType.LOGIN_MSG;
 					reply.field2 = "TRUE";
 					out.writeObject(reply);
+					Utils.disconnect(userEmail);
 					client.close();
 				} else {
 					/**
@@ -122,7 +123,7 @@ public class Server {
                     message.field2 = "TRUE";
                     out.writeObject(message);
                     
-                    // Disconnect the user
+                    Utils.disconnect(userEmail);
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
@@ -137,14 +138,14 @@ public class Server {
 					// Deliver the message straight away
 				    Utils.sendMessage(msg);
 				    
-				    // Disconnect user
+				    Utils.disconnect(userEmail);
 				    client.close();
 				} else {
 				    int messageID = DBUtils.addTransaction(msg);
 					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
 					
-					// Disconnect user
+					Utils.disconnect(userEmail);
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
@@ -155,8 +156,8 @@ public class Server {
 				} else
 					Utils.logUserOff(userEmail);
 				
-				    // Disconnect user 
-				    client.close();
+				Utils.disconnect(userEmail);
+				client.close();
 			}
 
 			// TODO : figure out when to shut the server

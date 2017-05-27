@@ -41,6 +41,10 @@ public class Utils {
 		queueMessage(userEmail, messageID, loc);
 		return messageID;
 	}
+	
+	public static void disconnect(String userEmail) {
+	    onlineUsers.get(userEmail).disconnected();
+	}
 
 	public static void queueMessage(String userEmail, int id, Location loc) {
 		QueueObject obj = new QueueObject(id, loc);
