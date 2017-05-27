@@ -1,5 +1,4 @@
 package MAIN;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -17,8 +16,9 @@ import java.util.ArrayList;
  */
 public class Server {
 
-	public Server(int port) throws IOException {
+	public Server(int port) throws Exception {
 		/* Creates a listening */
+	    //DBUtils.createConnection();
 	    DBUtils.cleanup();
 	    DBUtils.createDatabase();
 	    DBUtils.populateUsersTable("C:/Users/harshini/Downloads/DummyUsers.csv");
@@ -26,7 +26,7 @@ public class Server {
         DBUtils.createTransactionsTable();
         
 		ServerSocket server = new ServerSocket(port);
-		server.setSoTimeout(700000);
+		//server.setSoTimeout(700000);
 
 		while (true) {
 			Socket client = server.accept(); // Accepts connection request from
@@ -35,16 +35,22 @@ public class Server {
 			System.out.println("Accepted connection request from " + client.getInetAddress()); // Prints
 
 			// Get the input and output streams for the socket
+			System.out.println("BEFORE ESTABLISHING IN STREAM");
 			ObjectInputStream in = new ObjectInputStream(client.getInputStream());
+			
+			System.out.println("BEFORE ESTABLISHING OUT STREAM");
 			ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
 			Message msg = null;
 			String userEmail = null;
-
+			
+			System.out.println("BEFORE MREADING MSG");
 			try {
 				msg = (Message) in.readObject();
+				System.out.println(msg);
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
+			System.out.println("READ WHATEVE");
 
 			if (msg.msgType == Message.MsgType.LOGIN_MSG) {
 				/*
@@ -69,6 +75,7 @@ public class Server {
 					String invalidUserMsg = "ERROR: Email ID Not Registered on System";
 					message.field4 = invalidUserMsg;
 					out.writeObject(message);
+					out.flush();
 					client.close();
 					
 					// Disconnect user
@@ -92,12 +99,13 @@ public class Server {
                     String wrongPasswordMsg = "ERROR: Wrong Password";
                     message.field4 = wrongPasswordMsg;
                     out.writeObject(message);
+                    out.flush();
 					client.close();
 					
 					continue;
 				}
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), client.getPort()));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), 6068));
 
 				boolean sendEmptyAffirmation = false;
 				if (Utils.messageQueueForUserExists(userEmail)) {
@@ -110,13 +118,16 @@ public class Server {
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
 					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false);
-					if (messageIdList.isEmpty())
+					if (messageIdList == null || messageIdList.isEmpty())
 						sendEmptyAffirmation = true;
 					else {
 						Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
+						
 						reply.msgType = Message.MsgType.LOGIN_MSG;
 						reply.field2 = "TRUE";
 						out.writeObject(reply);
+						out.flush();
+						System.out.println(reply);
 						client.close();
 					}
 				} else
@@ -131,8 +142,11 @@ public class Server {
 					 * f4 - null
 					 */
 					out.writeObject(msg);
+					out.flush();
 					client.close();
 				}
+				
+				ProbeManager.startProbeFor(userEmail);
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
 				/* handle sending a new message */
 				userEmail = msg.field1;
@@ -156,12 +170,24 @@ public class Server {
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
 				userEmail = msg.field1;
+				System.out.println("IN log off ");
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
-				} else
+				} else {
 					Utils.logUserOff(userEmail);
+					Message message = new Message();
+                    message.msgType = msg.msgType;
+                    message.field1 = userEmail;
+                    message.field2 = "FALSE";
+                    String wrongPasswordMsg = "ERROR: Wrong Password";
+                    message.field4 = wrongPasswordMsg;
+                    out.writeObject(message);
+                    out.flush();
 				    client.close();
+				    ProbeManager.closeProbeForUser(userEmail);
+				}
 			}
+			
 
 			// TODO : figure out when to shut the server
 		}
@@ -175,7 +201,7 @@ public class Server {
 	    return DBUtils.checkPassword(userEmail, password);
 	}
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 	    int port = 6066;
 	    Server server = new Server(port);
 	}
