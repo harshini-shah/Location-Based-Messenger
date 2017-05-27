@@ -21,7 +21,7 @@ public class TestSocketServer extends Thread {
 		boolean flag = true;
 		while (flag) {
 			try {
-				DBUtils db;
+				
 				System.out.println("Waiting for client on port " + serverSocket.getLocalPort() + "...");
 				Socket client = serverSocket.accept();
 

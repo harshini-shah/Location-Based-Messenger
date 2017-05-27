@@ -19,6 +19,11 @@ public class Server {
 
 	public Server(int port) throws IOException {
 		/* Creates a listening */
+	    DBUtils.cleanup();
+	    DBUtils.createDatabase();
+        DBUtils.populateDummyUsersTable("C:/Users/harshini/Downloads/Dummy_users.csv");
+        DBUtils.createTransactionsTable();
+        
 		ServerSocket server = new ServerSocket(port);
 
 		while (true) {
@@ -162,6 +167,11 @@ public class Server {
 
 	private boolean checkPassword(String userEmail, String password) {
 	    return DBUtils.checkPassword(userEmail, password);
+	}
+	
+	public static void main(String[] args) throws IOException {
+	    int port = 6066;
+	    Server server = new Server(port);
 	}
 
 }
