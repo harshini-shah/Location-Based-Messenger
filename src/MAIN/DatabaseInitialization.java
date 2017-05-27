@@ -197,7 +197,16 @@ public class DatabaseInitialization {
          }
     }
     
-    public Message getMessage(int id, String receiverEmail) {
+    /*TODO: made id arraylist*/
+    public static Message getMessage(int id, String receiverEmail) {
+    	/**
+		 * CREATE MSG OBJ
+		 * msgType = NOTIFICATION
+		 * f1 - recevierEmail (vignesh@uci.edu)
+		 * f2 - 
+		 * f3 - "messageText(id1) | messageText(id2) | messageText(id3)....."
+		 * f4 - "owner(id1) | owner(id2) | owner(id3)..."
+		 */
         Message message = new Message();
         message.field2 = receiverEmail;
         
