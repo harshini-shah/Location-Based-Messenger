@@ -4,6 +4,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /*
  * Starts the server on the specified port number. It listens on the port for connection requests (log in) from 
@@ -89,7 +90,12 @@ public class Server {
 					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
-					ClientThread clientThread = new ClientThread(client, userEmail);
+					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false);
+					Message reply = null;//DatabaseInitialization.getMessage(messageIdList, userEmail);
+					reply.msgType = Message.MsgType.LOGIN_MSG;
+					reply.field2 = "TRUE";
+					out.writeObject(reply);
+					client.close();
 				} else {
 					/**
 					 * CREATE MSG OBJ

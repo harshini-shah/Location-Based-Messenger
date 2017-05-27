@@ -67,7 +67,7 @@ public class Utils {
 		return messageQueueBank.get(userEmail) != null && !messageQueueBank.get(userEmail).isEmpty();
 	}
 
-	public static boolean deliverAllPossibleMessages(String userEmail) {
+	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
@@ -88,10 +88,13 @@ public class Utils {
 		}
 
 		if (delivered) {
+			if(!shouldIDeliver)
+				return messageIdList;
+
 			Message msg = null; /* Use MessageID List, to get Messages from harshini */ 
 			Mercury.addRequest(msg);
 		}
-		return delivered;
+		return null;
 	}
 
 	private static Object getMutexForUser(String userEmail) {

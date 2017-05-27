@@ -17,7 +17,7 @@ public class ClientThread extends Thread {
 			handleExit();
 			return;
 		}
-		Utils.deliverAllPossibleMessages(userEmail);
+		Utils.deliverAllPossibleMessages(userEmail, false);
 	}
 
 	public void handleExit() {
