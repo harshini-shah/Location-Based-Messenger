@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 
 public class DBUtils {
     static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
@@ -227,14 +228,39 @@ public class DBUtils {
             String sql = "SELECT SenderEmail, MessageText FROM TRANSACTIONS " + "WHERE id = " + id;
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                message.field1 = rs.getString("SenderEmail");
-                message.field3 = rs.getString("MessageText");
+                message.field3 = rs.getString("SenderEmail");
+                message.field4 = rs.getString("MessageText");
             }
         } catch (SQLException se) {
             se.printStackTrace();
-         } catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
-         }
+        }
+        return message;
+    }
+    
+    /*
+     * Assumes that all the recipients are the same - No error checking done
+     */
+    public static Message getMessagesFromDB(ArrayList<Integer> messageIdList, String userEmail) {
+        Message message = new Message();
+        message.msgType = Message.MsgType.NOTIFICATION;
+        
+        String field1 = userEmail;
+        String field3 = "";
+        String field4 = "";
+        
+        for (int id : messageIdList) {
+            message = getMessage(id, userEmail);
+            field3 += message.field1 + " | ";
+            field4 += message.field2 + " | ";  
+        }
+        
+        field3 = field3.substring(0, field3.length() - 3);
+        field4 = field4.substring(0, field4.length() - 3);
+        
+        message.field3 = field3;
+        message.field4 = field4;
         return message;
     }
     

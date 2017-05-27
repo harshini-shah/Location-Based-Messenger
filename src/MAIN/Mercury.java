@@ -46,7 +46,7 @@ public class Mercury {
 				}
 
 				if (msg != null) {
-					/* Call Harshini's API for sending Message */
+				    Utils.sendMessage(msg, false);
 				}
 			}
 		}
