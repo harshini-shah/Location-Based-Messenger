@@ -47,4 +47,11 @@ public class Message implements Serializable {
 	public String field2;
 	public String field3;
 	public String field4;
+	
+	public Message() {
+	    this.field1 = null;
+	    this.field2 = null;
+	    this.field3 = null;
+	    this.field4 = null;
+	}
 }
