@@ -47,7 +47,7 @@ public class DBTests {
     
     public static void main(String[] args) {
         DBUtils.createDatabase();
-        DBUtils.populateUsersTable("C:/Users/harshini/Downloads/DummyUsers.csv");
+        DBUtils.populateDummyUsersTable("C:/Users/harshini/Downloads/Dummy_users.csv");
 //        System.out.println(DBUtils.checkUser("Harshini"));
 //        System.out.println(DBUtils.checkPassword("Harshini", "harshi"));
         
@@ -62,6 +62,7 @@ public class DBTests {
         System.out.println(DBUtils.addTransaction(m3));
 
         System.out.println(DBUtils.getMessage(1, m1.field2));
+        
         DBUtils.cleanup();
     }
 }
