@@ -1,42 +1,61 @@
 package ClientCode;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
 import MAIN.Message;
 
-
 public class ClientReceive extends Thread {
 
-	private Socket test_socket;
+	private String user_id;
 	private static ObjectInputStream inputStream = null;
-
-	public ClientReceive(Socket test_socket){
-		this.test_socket = test_socket;
+	boolean shouldIAllow;
+	public ClientReceive(String user_id) {
+		this.user_id = user_id;
+		shouldIAllow = true;
 	}
-	@Override
-	public void run(){
-		while(true){ //confirm this
-			try{
 
+	public void down() {
+		try {
+			wait.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		shouldIAllow = false;
+	}
+	ServerSocket wait = null;
+	@Override
+	public void run() {
+
+		
+		try {
+			wait = new ServerSocket(6068);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		while (shouldIAllow) { // confirm this
+			try {
+
+				Socket test_socket = wait.accept();
 				inputStream = new ObjectInputStream(test_socket.getInputStream());
-				Message fromServer = (Message)inputStream.readObject();
-				//for(int i = 0; i < fromServer.count; i++) // For counting the number of messages in the queue to run the loop
-				//{
-					fromServer = (Message)inputStream.readObject();
-					System.out.println(fromServer.field3);
-				//}
-			}
-			
-			//if(shouldStop)
-				//break;
-			
-			catch (SocketException se) {
-				se.printStackTrace();
-				// System.exit(0);
-			} 
-			catch (IOException e) {
+				Message fromServer = (Message) inputStream.readObject();
+
+				if ((fromServer.msgType == Message.MsgType.NOTIFICATION)
+						&& ((fromServer.field1.compareTo(user_id)) == 0)) {
+					System.out.println("MESSAGE = " + fromServer.field3);
+					System.out.println("FROM = " + fromServer.field4);
+				}
+
+				// if(shouldStop)
+				// break;
+			} catch (SocketException se) {
+				System.out.println("IZZAT SE CLOSE KIA");
+			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block
