@@ -126,6 +126,72 @@ public class DBUtils {
          }
     }
     
+    public static void populateDummyUsersTable(String csvFile) {
+        try {
+            System.out.println("Creating DUMMY_USERS table in given database...");
+            stmt = conn.createStatement();
+            
+            String createTable = "CREATE TABLE DUMMY_USERS " +
+                         "(UserEmail VARCHAR(255), " + 
+                         " Location VARCHAR(255))"; 
+
+            stmt.executeUpdate(createTable);
+            System.out.println("Created table in given database...");
+            
+            System.out.println("Inserting records into the table...");
+            
+            BufferedReader br = null;
+            String line = "";
+            String cvsSplitBy = ",";
+            
+            try {
+                br = new BufferedReader(new FileReader(csvFile));
+                int id = 1;
+                while ((line = br.readLine()) != null) {
+                    String[] user = line.split(cvsSplitBy);
+                    String record = "VALUES ('" + user[0] + "', '" + user[1] + "')";
+                    String insertRecord = "INSERT INTO DUMMY_USERS " + record;
+                    stmt.executeUpdate(insertRecord);
+                }
+                System.out.println("Successfully inserted dummy_users with location");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (br != null) {
+                    try {
+                        br.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+         } catch (SQLException se) {
+            se.printStackTrace();
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+    }
+    
+    public static void changeLocation(String userEmail, String newLocation) {
+        try {
+            stmt = conn.createStatement();
+            String deleteRecord = "DELETE FROM DUMMY_USERS " +
+                    "WHERE UserEmail = '" + userEmail + "')";
+            
+            stmt.executeUpdate(deleteRecord);
+            stmt = conn.createStatement();
+            String record = "VALUES ('" + userEmail + "', '" + newLocation + "')"; 
+            String insertRecord = "INSERT INTO DUMMY_USERS " + record;
+            stmt.executeUpdate(insertRecord);
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
     /*
      * Creates a table "TRANSACTIONS" which stores the record of all the pending messages. 
      * For each transaction, it stores the sender, receiver, messageId, messageText.
