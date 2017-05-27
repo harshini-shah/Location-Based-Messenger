@@ -124,6 +124,7 @@ public class Utils {
 	 * message is got from the database and already properly formatted.
 	 * 
 	 */
+
 	public static void sendMessage(Message message, boolean toReformat) {
 	    if (toReformat) {
 	        message.msgType = Message.MsgType.NOTIFICATION;
@@ -131,8 +132,10 @@ public class Utils {
 	        String receiverEmail = message.field2;
 	        message.field4 = senderEmail;
 	        message.field1 = receiverEmail;
-	    }  	    
-	    
+	    }	    
+
+	public static void sendMessage(Message message) {
+
 	    // Establish the connection and send the message
 	    try {
             Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, onlineUsers.get(message.field1).port);

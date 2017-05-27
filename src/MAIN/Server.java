@@ -142,8 +142,10 @@ public class Server {
 
 				// Check if the user is online and the location is a match
 				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
-					// Deliver the message straight away
-				    Utils.sendMessage(msg, true);
+					msg.msgType = Message.MsgType.NOTIFICATION;
+			        msg.field4 = msg.field1;
+			        msg.field1 = msg.field2;
+				    Utils.sendMessage(msg);
 				    client.close();
 				} else {
 				    int messageID = DBUtils.addTransaction(msg);
