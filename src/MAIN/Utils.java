@@ -37,10 +37,9 @@ public class Utils {
 		onlineUsers.put(email, userObj);
 	}
 
-	public static int queueMessage(String userEmail, String message, Location loc) {
-		int id = getMessageIdFor(message);
-		queueMessage(userEmail, id, loc);
-		return id;
+	public static int queueMessage(String userEmail, String message, Location loc, int messageID) {
+		queueMessage(userEmail, messageID, loc);
+		return messageID;
 	}
 
 	public static void queueMessage(String userEmail, int id, Location loc) {
@@ -112,13 +111,11 @@ public class Utils {
 		nullCheck();
 		return new Location("XYZ");
 	}
-
-	public static int getMessageIdFor(String message) {
-		/* To implement Message bank here */
-		return -1;
-	}
-
-	public static String getMessageForId(int id) {
-		return "dummy";
+	
+	/*
+	 * Message is of type incoming Message, have to reformat it and send it accordingly
+	 */
+	public static void sendMessage(Message incomingMessage) {
+	    
 	}
 }

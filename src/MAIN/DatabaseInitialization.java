@@ -197,6 +197,18 @@ public class DatabaseInitialization {
          }
     }
     
+    public static int addTransaction(Message message) {
+        return -1;
+    }
+    
+    public static boolean checkUser(String userEmail) {
+        return false;
+    }
+    
+    public static boolean checkPassword(String userEmail) {
+        return false;
+    }
+    
     /*TODO: made id arraylist*/
     public static Message getMessage(int id, String receiverEmail) {
     	/**
