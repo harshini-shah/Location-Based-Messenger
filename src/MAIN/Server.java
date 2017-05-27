@@ -140,7 +140,7 @@ public class Server {
 				    // Disconnect user
 				    client.close();
 				} else {
-				    int messageID = DatabaseInitialization.addTransaction(msg);
+				    int messageID = DBUtils.addTransaction(msg);
 					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
 					
@@ -164,11 +164,11 @@ public class Server {
 	}
 
 	private boolean registeredUser(String userEmail) {
-	    return DatabaseInitialization.checkUser(userEmail);
+	    return DBUtils.checkUser(userEmail);
 	}
 
 	private boolean checkPassword(String userEmail, String password) {
-	    return DatabaseInitialization.checkPassword(userEmail);
+	    return DBUtils.checkPassword(userEmail, password);
 	}
 
 }
