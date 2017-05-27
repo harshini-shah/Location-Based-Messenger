@@ -26,6 +26,12 @@ public class DBUtils {
     
     private static int transactionID = 0;
     
+    public static void createConnection() throws Exception {
+        Class.forName(JDBC_DRIVER);
+        System.out.println("Connecting to the messenger database...");
+        conn = DriverManager.getConnection(TABLES_URL, USER, PASS);
+    }
+    
     /*
      * Creates a database called "MESSENGER". 
      */
@@ -129,6 +135,12 @@ public class DBUtils {
     
     public static void populateDummyUsersTable(String csvFile) {
         try {
+            Class.forName(JDBC_DRIVER);
+//            System.out.println("Connecting to the messenger database...");
+            conn = DriverManager.getConnection(TABLES_URL, USER, PASS);
+//            System.out.println("Connected database successfully...");
+            
+//            System.out.println("Creating users table in given database...");
             System.out.println("Creating DUMMY_USERS table in given database...");
             stmt = conn.createStatement();
             
@@ -176,16 +188,25 @@ public class DBUtils {
     }
     
     public static void changeLocation(String userEmail, String newLocation) {
+        
+        
         try {
+            Class.forName(JDBC_DRIVER);
+//            System.out.println("Connecting to the messenger database...");
+            conn = DriverManager.getConnection(TABLES_URL, USER, PASS);
+//            System.out.println("Connected database successfully...");
+            
+//            System.out.println("Creating users table in given database...");
             stmt = conn.createStatement();
-            String deleteRecord = "DELETE FROM DUMMY_USERS " +
-                    "WHERE UserEmail = '" + userEmail + "')";
+            
+            String deleteRecord = "UPDATE Dummy_users " +
+                    "SET Location = '" + newLocation + "' WHERE UserEmail = '" + userEmail + "'";
             
             stmt.executeUpdate(deleteRecord);
-            stmt = conn.createStatement();
-            String record = "VALUES ('" + userEmail + "', '" + newLocation + "')"; 
-            String insertRecord = "INSERT INTO DUMMY_USERS " + record;
-            stmt.executeUpdate(insertRecord);
+//            stmt = conn.createStatement();
+//            String record = "VALUES ('" + userEmail + "', '" + newLocation + "')"; 
+//            String insertRecord = "INSERT INTO DUMMY_USERS " + record;
+//            stmt.executeUpdate(insertRecord);
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
@@ -230,7 +251,7 @@ public class DBUtils {
         /* This is dummy, we need to get location from TIPPERS at this point */
         try {
             stmt = conn.createStatement();
-            String findLoc = "SELECT Location FROM DUMMY_USERS " + "WHERE UserEmail = '" + userEmail + "'";
+            String findLoc = "SELECT Location FROM Dummy_users " + "WHERE UserEmail = '" + userEmail + "'";
             ResultSet rs = stmt.executeQuery(findLoc);
             while (rs.next()) {
                 return new Location(rs.getString("Location"));
@@ -313,8 +334,8 @@ public class DBUtils {
             String sql = "SELECT SenderEmail, MessageText FROM TRANSACTIONS " + "WHERE id = " + id;
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                message.field3 = rs.getString("SenderEmail");
-                message.field4 = rs.getString("MessageText");
+                message.field4 = rs.getString("SenderEmail");
+                message.field3 = rs.getString("MessageText");
             }
         } catch (SQLException se) {
             se.printStackTrace();
@@ -331,19 +352,20 @@ public class DBUtils {
         Message message = new Message();
         message.msgType = Message.MsgType.NOTIFICATION;
         
-        String field1 = userEmail;
         String field3 = "";
         String field4 = "";
         
         for (int id : messageIdList) {
+            System.out.println("MESSAGE ID IS " + id);
             message = getMessage(id, userEmail);
-            field3 += message.field1 + " | ";
-            field4 += message.field2 + " | ";  
+            field3 += message.field3 + " | ";
+            field4 += message.field4 + " | ";  
         }
         
         field3 = field3.substring(0, field3.length() - 3);
         field4 = field4.substring(0, field4.length() - 3);
         
+        message.field1 = userEmail;
         message.field3 = field3;
         message.field4 = field4;
         return message;
