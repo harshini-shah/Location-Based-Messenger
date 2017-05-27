@@ -1,3 +1,4 @@
+
 package MAIN;
 import java.util.HashMap;
 
@@ -40,7 +41,7 @@ public class ProbeManager {
 		public void run() {
 			while (Utils.messageQueueForUserExists(email)) {
 				try {
-					Utils.deliverAllPossibleMessages(email);
+					Utils.deliverAllPossibleMessages(email, true);
 					Thread.sleep(150);
 				} catch (InterruptedException E) {
 					if (!Utils.isUserOnline(email))
