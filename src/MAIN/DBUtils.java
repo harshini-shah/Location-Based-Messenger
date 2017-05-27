@@ -1,6 +1,7 @@
 package MAIN;
 /*
  * This class provides methods to set up the database.
+ * TODO : Multicast is NOT supported.
  */
 
 import java.io.BufferedReader;
@@ -8,23 +9,28 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.*;
+import java.util.ArrayList;
 
-public class DatabaseInitialization {
-    protected static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
-    protected static final String DB_URL = "jdbc:mysql://localhost/";
+public class DBUtils {
+    static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";  
+    static final String DB_URL = "jdbc:mysql://localhost/";
     
-    protected static final String USER = "harshini";
-    protected static final String PASS = "password";
+    static final String USER = "harshini";
+    static final String PASS = "password";
     
-    protected static final String DB_NAME = "MESSENGER";
-    protected static final String TABLES_URL = "jdbc:mysql://localhost/" + DB_NAME;
+    static final String DB_NAME = "MESSENGER";
+    static final String TABLES_URL = "jdbc:mysql://localhost/" + DB_NAME;
+    
+    static Connection conn = null;
+    static Statement stmt = null;
+    
+    private static int transactionID = 0;
     
     /*
      * Creates a database called "MESSENGER". 
      */
     public static void createDatabase() {
-        Connection conn = null;
-        Statement stmt = null;
+        
         try {
             Class.forName(JDBC_DRIVER);
             System.out.println("Connecting to database...");
@@ -33,8 +39,10 @@ public class DatabaseInitialization {
             System.out.println("Creating database '" + DB_NAME + "'...");
             stmt = conn.createStatement();
             String createDB = "CREATE DATABASE " + DB_NAME;
-            stmt.executeQuery(createDB);
+            stmt.executeUpdate(createDB);
             System.out.println("Database " + DB_NAME + " created successfully...");
+            
+            System.out.println("Finished creating the Database");
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
@@ -56,8 +64,6 @@ public class DatabaseInitialization {
                 se.printStackTrace();
             }
         }
-        
-        System.out.println("Finished creating the Database");
     }
     
     /*
@@ -66,9 +72,6 @@ public class DatabaseInitialization {
      * Creates a "USERS" table in the database and adds this info to it. 
      */
     public static void populateUsersTable(String csvFile) {
-        Connection conn = null;
-        Statement stmt = null;
-        
         try {
             Class.forName(JDBC_DRIVER);
             System.out.println("Connecting to the messenger database...");
@@ -102,7 +105,7 @@ public class DatabaseInitialization {
                     String insertRecord = "INSERT INTO Users " + record;
                     stmt.executeUpdate(insertRecord);
                 }
-                System.out.println("Successfully inserted " + --id + "users");
+                System.out.println("Successfully inserted " + --id + " users");
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -120,22 +123,6 @@ public class DatabaseInitialization {
             se.printStackTrace();
          } catch (Exception e) {
             e.printStackTrace();
-         } finally {
-            try {
-               if (stmt != null) {
-                   conn.close();
-               }
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
-            
-            try {
-               if (conn != null) {
-                   conn.close();
-               }
-            } catch (SQLException se) {
-               se.printStackTrace();
-            }
          }
     }
     
@@ -152,16 +139,7 @@ public class DatabaseInitialization {
      * database.
      */
     public static void createTransactionsTable() {
-        Connection conn = null;
-        Statement stmt = null;
-        
         try {
-            Class.forName(JDBC_DRIVER);
-            System.out.println("Connecting to the messenger database...");
-            conn = DriverManager.getConnection(TABLES_URL, USER, PASS);
-            System.out.println("Connected database successfully...");
-            
-            System.out.println("Creating transactions table in given database...");
             stmt = conn.createStatement();
             
             String createTable = "CREATE TABLE TRANSACTIONS " +
@@ -178,34 +156,56 @@ public class DatabaseInitialization {
             se.printStackTrace();
          } catch (Exception e) {
             e.printStackTrace();
-         } finally {
-            try {
-               if (stmt != null) {
-                   conn.close();
-               }
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
-            
-            try {
-               if (conn != null) {
-                   conn.close();
-               }
-            } catch (SQLException se) {
-               se.printStackTrace();
-            }
          }
     }
     
     public static int addTransaction(Message message) {
-        return -1;
+        try {
+            stmt = conn.createStatement();
+    
+            String record = "VALUES (" + ++transactionID + ", '" + message.field1 
+                    + "', '" + message.field2 + "', '" + message.field3 +
+                    "', '" + message.field4 + "')";
+            String insertRecord = "INSERT INTO TRANSACTIONS " + record;
+            stmt.executeUpdate(insertRecord);
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return transactionID;
     }
     
     public static boolean checkUser(String userEmail) {
+        try {
+            stmt = conn.createStatement();
+
+            String sql = "SELECT id FROM USERS " + "WHERE UserEmail = '" + userEmail + "'";
+            ResultSet rs = stmt.executeQuery(sql);
+            return rs.next();
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
     
-    public static boolean checkPassword(String userEmail) {
+    public static boolean checkPassword(String userEmail, String password) {
+        try {
+            stmt = conn.createStatement();
+
+            String sql = "SELECT Password FROM USERS " + "WHERE UserEmail = '" + userEmail + "'";
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()) {
+                return password.equals(rs.getString("Password"));
+            }
+        } catch (SQLException se) {
+            se.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return false;
     }
     
@@ -222,45 +222,45 @@ public class DatabaseInitialization {
         Message message = new Message();
         message.field2 = receiverEmail;
         
-        Connection conn = null;
-        Statement stmt = null;
-        
         try {
-            Class.forName(JDBC_DRIVER);
-            System.out.println("Connecting to the messenger database...");
-            conn = DriverManager.getConnection(TABLES_URL, USER, PASS);
-            System.out.println("Connected database successfully...");
-            
-            System.out.println("Creating statement...");
             stmt = conn.createStatement();
 
-            String sql = "SELECT SenderEmail, MessageText FROM TRANSACTIONS" + "WHERE id = " + id;
+            String sql = "SELECT SenderEmail, MessageText FROM TRANSACTIONS " + "WHERE id = " + id;
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()) {
-                message.field1 = rs.getString("SenderEmail");
-                message.field3 = rs.getString("MessageText");
+                message.field3 = rs.getString("SenderEmail");
+                message.field4 = rs.getString("MessageText");
             }
         } catch (SQLException se) {
             se.printStackTrace();
-         } catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
-         } finally {
-            try {
-               if (stmt != null) {
-                   conn.close();
-               }
-            } catch (SQLException se) {
-                se.printStackTrace();
-            }
-            
-            try {
-               if (conn != null) {
-                   conn.close();
-               }
-            } catch (SQLException se) {
-               se.printStackTrace();
-            }
-         }
+        }
+        return message;
+    }
+    
+    /*
+     * Assumes that all the recipients are the same - No error checking done
+     */
+    public static Message getMessagesFromDB(ArrayList<Integer> messageIdList, String userEmail) {
+        Message message = new Message();
+        message.msgType = Message.MsgType.NOTIFICATION;
+        
+        String field1 = userEmail;
+        String field3 = "";
+        String field4 = "";
+        
+        for (int id : messageIdList) {
+            message = getMessage(id, userEmail);
+            field3 += message.field1 + " | ";
+            field4 += message.field2 + " | ";  
+        }
+        
+        field3 = field3.substring(0, field3.length() - 3);
+        field4 = field4.substring(0, field4.length() - 3);
+        
+        message.field3 = field3;
+        message.field4 = field4;
         return message;
     }
     
@@ -268,8 +268,13 @@ public class DatabaseInitialization {
      * again, everything works.
      */
     public static void cleanup() {
-        Connection conn = null;
-        Statement stmt = null;
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
         
         try {
            Class.forName(JDBC_DRIVER);

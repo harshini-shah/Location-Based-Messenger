@@ -10,18 +10,13 @@ import java.net.SocketAddress;
 public class User {
     private Location currLocation;
     protected String userEmail;
-    protected SocketAddress ipAddress;
-    boolean flag;
+    protected InetAddress ipAddress;
+    int port;
 
-    public User(String userEmail, SocketAddress ipAddress) {
+    public User(String userEmail, InetAddress ipAddress, int port) {
         this.userEmail = userEmail;
         this.ipAddress = ipAddress;
-        flag = true;
     }
-
-	public void disconnected() {
-		flag = false;
-	}
 
     protected Location getCurrLocation() {
         return this.currLocation;
@@ -31,7 +26,7 @@ public class User {
         this.currLocation = currLocation;
     }
     
-    protected SocketAddress getIPAddress() {
+    protected InetAddress getIPAddress() {
         return this.ipAddress;
     }
 }

@@ -13,6 +13,7 @@ import java.util.ArrayList;
  * It then spawns a thread (instance of the ClientThread class) to handle it.
  * 
  *  TODO : All synchronization is left
+ *  TODO : Flush everytime you write
  */
 public class Server {
 
@@ -86,11 +87,10 @@ public class Server {
                     out.writeObject(message);
 					client.close();
 					
-					// Disconnect the user
 					continue;
 				}
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getRemoteSocketAddress()));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), client.getPort()));
 
 				if (Utils.messageQueueForUserExists(userEmail)) {
 					/**
@@ -122,7 +122,6 @@ public class Server {
                     message.field2 = "TRUE";
                     out.writeObject(message);
                     
-                    // Disconnect the user
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
@@ -135,16 +134,12 @@ public class Server {
 				// Check if the user is online and the location is a match
 				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
 					// Deliver the message straight away
-				    Utils.sendMessage(msg);
-				    
-				    // Disconnect user
+				    Utils.sendMessage(msg, true);
 				    client.close();
 				} else {
-				    int messageID = DatabaseInitialization.addTransaction(msg);
+				    int messageID = DBUtils.addTransaction(msg);
 					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
-					
-					// Disconnect user
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
@@ -154,8 +149,6 @@ public class Server {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
 				} else
 					Utils.logUserOff(userEmail);
-				
-				    // Disconnect user 
 				    client.close();
 			}
 
@@ -164,11 +157,11 @@ public class Server {
 	}
 
 	private boolean registeredUser(String userEmail) {
-	    return DatabaseInitialization.checkUser(userEmail);
+	    return DBUtils.checkUser(userEmail);
 	}
 
 	private boolean checkPassword(String userEmail, String password) {
-	    return DatabaseInitialization.checkPassword(userEmail);
+	    return DBUtils.checkPassword(userEmail, password);
 	}
 
 }
