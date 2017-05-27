@@ -68,12 +68,16 @@ public class Utils {
 	public static boolean messageQueueForUserExists(String userEmail) {
 		return messageQueueBank.get(userEmail) != null && !messageQueueBank.get(userEmail).isEmpty();
 	}
+	
+	public static Location getCurrentLocationForUser(String userEmail) {
+	    return DBUtils.getCurrentLocationForUser(userEmail);
+	}
 
 	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
-		Location currentLocation = DBUtils.getCurrentLocationForUser(userEmail);
+		Location currentLocation = getCurrentLocationForUser(userEmail);
 		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
 
 		synchronized (messageQueueMutex) {
