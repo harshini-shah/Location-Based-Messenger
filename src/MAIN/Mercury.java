@@ -46,7 +46,7 @@ public class Mercury {
 				}
 
 				if (msg != null) {
-				    Utils.sendMessage(msg, false);
+				    Utils.sendMessage(msg);
 				}
 			}
 		}

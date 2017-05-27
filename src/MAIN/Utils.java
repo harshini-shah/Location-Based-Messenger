@@ -68,6 +68,10 @@ public class Utils {
 	public static boolean messageQueueForUserExists(String userEmail) {
 		return messageQueueBank.get(userEmail) != null && !messageQueueBank.get(userEmail).isEmpty();
 	}
+	
+	public static Location getCurrentLocationForUser(String userEmail) {
+	    return DBUtils.getCurrentLocationForUser(userEmail);
+	}
 
 	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver) {
 		boolean delivered = false;
@@ -111,12 +115,6 @@ public class Utils {
 		 */
 		return messageQueueBank.get(userEmail);
 	}
-
-	public static Location getCurrentLocationForUser(String userEmail) {
-		/* This is dummy, we need to get location from TIPPERS at this point */
-		nullCheck();
-		return new Location("XYZ");
-	}
 	
 	/*
 	 * Can be called from two places:
@@ -126,14 +124,8 @@ public class Utils {
 	 * message is got from the database and already properly formatted.
 	 * 
 	 */
-	public static void sendMessage(Message message, boolean toReformat) {
-	    if (toReformat) {
-	        String senderEmail = message.field1;
-	        String receiverEmail = message.field2;
-	        message.field4 = senderEmail;
-	        message.field1 = receiverEmail;
-	    }  	    
-	    
+	public static void sendMessage(Message message) {
+
 	    // Establish the connection and send the message
 	    try {
             Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, onlineUsers.get(message.field1).port);
