@@ -4,6 +4,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /*
  * Starts the server on the specified port number. It listens on the port for connection requests (log in) from 
@@ -12,6 +13,7 @@ import java.net.Socket;
  * It then spawns a thread (instance of the ClientThread class) to handle it.
  * 
  *  TODO : All synchronization is left
+ *  TODO : Flush everytime you write
  */
 public class Server {
 
@@ -31,7 +33,6 @@ public class Server {
 			Message msg = null;
 			String userEmail = null;
 
-			out.writeUTF("Please enter your username and password");
 			try {
 				msg = (Message) in.readObject();
 			} catch (ClassNotFoundException e) {
@@ -40,10 +41,8 @@ public class Server {
 
 			if (msg.msgType == Message.MsgType.LOGIN_MSG) {
 				/*
-				 * Handle a Login Req
-				 * 
-				 * TODO: Need to store info about client that can be used to
-				 * connect with it later (if someone sends it a message)
+				 * Handle a Login Required
+				 * TODO : make sure that the user is "disconnected" after you close the connection
 				 */
 
 				userEmail = msg.field1;
@@ -56,16 +55,22 @@ public class Server {
 					 * f2 - "FALSE"
 					 * f4 - "ERROR: Email ID Not Registered on System"
 					 */
+				    Message message = new Message();
+				    message.msgType = msg.msgType;
+				    message.field1 = userEmail;
+				    message.field2 = "FALSE";
 					String invalidUserMsg = "ERROR: Email ID Not Registered on System";
-					out.writeObject(invalidUserMsg);
+					message.field4 = invalidUserMsg;
+					out.writeObject(message);
 					client.close();
+					
+					// Disconnect user
 					continue;
 				}
 
 				String password = msg.field2;
 				// Check that the passwords match
 				if (!checkPassword(userEmail, password)) {
-					String wrongPasswordMsg = "ERROR: Wrong Password";
 					/**
 					 * CREATE MSG OBJ
 					 * msgType = same as before
@@ -73,12 +78,19 @@ public class Server {
 					 * f2 - "FALSE"
 					 * f4 - "ERROR: Wrong Password"
 					 */
-					out.writeObject(wrongPasswordMsg);
+					Message message = new Message();
+                    message.msgType = msg.msgType;
+                    message.field1 = userEmail;
+                    message.field2 = "FALSE";
+                    String wrongPasswordMsg = "ERROR: Wrong Password";
+                    message.field4 = wrongPasswordMsg;
+                    out.writeObject(message);
 					client.close();
+					
 					continue;
 				}
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getRemoteSocketAddress()));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), client.getPort()));
 
 				if (Utils.messageQueueForUserExists(userEmail)) {
 					/**
@@ -89,7 +101,12 @@ public class Server {
 					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
-					ClientThread clientThread = new ClientThread(client, userEmail);
+					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false);
+					Message reply = null;//DatabaseInitialization.getMessage(messageIdList, userEmail);
+					reply.msgType = Message.MsgType.LOGIN_MSG;
+					reply.field2 = "TRUE";
+					out.writeObject(reply);
+					client.close();
 				} else {
 					/**
 					 * CREATE MSG OBJ
@@ -99,7 +116,12 @@ public class Server {
 					 * f3 - null
 					 * f4 - null
 					 */
-					out.writeObject(msg);
+				    Message message = new Message();
+                    message.msgType = msg.msgType;
+                    message.field1 = userEmail;
+                    message.field2 = "TRUE";
+                    out.writeObject(message);
+                    
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
@@ -112,10 +134,13 @@ public class Server {
 				// Check if the user is online and the location is a match
 				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
 					// Deliver the message straight away
-
+				    Utils.sendMessage(msg, true);
+				    client.close();
 				} else {
-					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4));
+				    int messageID = DBUtils.addTransaction(msg);
+					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
+					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
@@ -124,6 +149,7 @@ public class Server {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
 				} else
 					Utils.logUserOff(userEmail);
+				    client.close();
 			}
 
 			// TODO : figure out when to shut the server
@@ -131,11 +157,11 @@ public class Server {
 	}
 
 	private boolean registeredUser(String userEmail) {
-		return true;
+	    return DBUtils.checkUser(userEmail);
 	}
 
 	private boolean checkPassword(String userEmail, String password) {
-		return true;
+	    return DBUtils.checkPassword(userEmail, password);
 	}
 
 }

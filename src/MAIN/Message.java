@@ -47,4 +47,22 @@ public class Message implements Serializable {
 	public String field2;
 	public String field3;
 	public String field4;
+	
+	public Message() {
+	    this.field1 = null;
+	    this.field2 = null;
+	    this.field3 = null;
+	    this.field4 = null;
+	}
+	
+	@Override
+	public String toString() {
+	    StringBuilder message = new StringBuilder();
+	    message.append("The message is of type " + this.msgType + "\n");
+	    message.append("Field 1 is " + this.field1 + "\n");
+	    message.append("Field 2 is " + this.field2 + "\n");
+	    message.append("Field 3 is " + this.field3 + "\n");
+	    message.append("Field 4 is " + this.field4 + "\n");
+	    return message.toString();
+	}
 }
