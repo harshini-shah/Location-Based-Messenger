@@ -88,8 +88,7 @@ public class Utils {
 		}
 
 		if (delivered) {
-			/* Use MessageID List, to get Messages from harshini */
-			Message msg = null; /* TODO: Get Message from Harshini */
+			Message msg = null; /* Use MessageID List, to get Messages from harshini */ 
 			Mercury.addRequest(msg);
 		}
 		return delivered;
