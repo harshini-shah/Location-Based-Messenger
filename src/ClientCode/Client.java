@@ -39,13 +39,22 @@ public class Client {
 			outputStream.writeObject(msg);
 			
 			Message fromServer = (Message)inputStream.readObject();
-			if(msg.field2.compareTo("FAILURE") == 0){
-				System.out.println("You are not registered to the System");
+			if( (fromServer.msgType == Message.MsgType.LOGIN_MSG) && 
+				( (fromServer.field1.compareTo(user_id) == 0) ) &&
+				( (fromServer.field2.compareTo("FALSE")) == 0) ){
+				System.out.println(fromServer.field4);
 				System.exit(0);
 			}
 			
-		//Receive a msg from client to confirm registered user and then proceed
-			ClientReceive clientReceive = new ClientReceive(test_socket);
+			if((fromServer.msgType == Message.MsgType.LOGIN_MSG) && 
+			  ( (fromServer.field1.compareTo(user_id) == 0) ) &&
+			  ( (fromServer.field2.compareTo("TRUE")) == 0 ) && 
+			  (fromServer.field3 != null) && (fromServer.field4 != null)){
+				System.out.println(fromServer.field3 + fromServer.field4);
+			}
+			
+			//Receive a msg from client to confirm registered user and then proceed
+			ClientReceive clientReceive = new ClientReceive(test_socket,user_id);
 			//test_socket.close();
 			//System.out.println("Your user id is:  " + user_id);
 
@@ -69,6 +78,7 @@ public class Client {
 				System.out.println("Your location is :  " + location);
 				//test_socket = new Socket(servername,port);
 				msg.msgType = MsgType.SEND_MSG;
+				msg.field1 = user_id;
 				msg.field2 = recipient_id;
 				msg.field3 = text_msg;
 				msg.field4 = location;// Convert it to location object

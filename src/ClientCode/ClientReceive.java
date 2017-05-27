@@ -10,10 +10,12 @@ import MAIN.Message;
 public class ClientReceive extends Thread {
 
 	private Socket test_socket;
+	private String user_id;
 	private static ObjectInputStream inputStream = null;
 
-	public ClientReceive(Socket test_socket){
+	public ClientReceive(Socket test_socket, String user_id){
 		this.test_socket = test_socket;
+		this.user_id = user_id;
 	}
 	@Override
 	public void run(){
@@ -22,26 +24,27 @@ public class ClientReceive extends Thread {
 
 				inputStream = new ObjectInputStream(test_socket.getInputStream());
 				Message fromServer = (Message)inputStream.readObject();
-				//for(int i = 0; i < fromServer.count; i++) // For counting the number of messages in the queue to run the loop
-				//{
-					fromServer = (Message)inputStream.readObject();
-					System.out.println(fromServer.field3);
-				//}
-			}
-			
-			//if(shouldStop)
+				fromServer = (Message)inputStream.readObject();
+
+				if( (fromServer.msgType == Message.MsgType.NOTIFICATION) &&
+				  ( (fromServer.field1.compareTo(user_id)) == 0) ){
+					System.out.println(fromServer.field3); 
+					System.out.println(fromServer.field4);
+				}
+
+				//if(shouldStop)
 				//break;
-			
-			catch (SocketException se) {
-				se.printStackTrace();
-				// System.exit(0);
-			} 
-			catch (IOException e) {
-				e.printStackTrace();
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
 			}
+				catch (SocketException se) {
+					se.printStackTrace();
+					// System.exit(0);
+				} 
+				catch (IOException e) {
+					e.printStackTrace();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 		}
 	}
 }
