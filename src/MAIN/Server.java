@@ -13,6 +13,7 @@ import java.util.ArrayList;
  * It then spawns a thread (instance of the ClientThread class) to handle it.
  * 
  *  TODO : All synchronization is left
+ *  TODO : Flush everytime you write
  */
 public class Server {
 
@@ -86,11 +87,10 @@ public class Server {
                     out.writeObject(message);
 					client.close();
 					
-					Utils.disconnect(userEmail);
 					continue;
 				}
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getRemoteSocketAddress()));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), client.getPort()));
 
 				if (Utils.messageQueueForUserExists(userEmail)) {
 					/**
@@ -106,7 +106,6 @@ public class Server {
 					reply.msgType = Message.MsgType.LOGIN_MSG;
 					reply.field2 = "TRUE";
 					out.writeObject(reply);
-					Utils.disconnect(userEmail);
 					client.close();
 				} else {
 					/**
@@ -123,7 +122,6 @@ public class Server {
                     message.field2 = "TRUE";
                     out.writeObject(message);
                     
-                    Utils.disconnect(userEmail);
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
@@ -136,16 +134,12 @@ public class Server {
 				// Check if the user is online and the location is a match
 				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
 					// Deliver the message straight away
-				    Utils.sendMessage(msg);
-				    
-				    Utils.disconnect(userEmail);
+				    Utils.sendMessage(msg, true);
 				    client.close();
 				} else {
 				    int messageID = DBUtils.addTransaction(msg);
 					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
-					
-					Utils.disconnect(userEmail);
 					client.close();
 				}
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
@@ -155,9 +149,7 @@ public class Server {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
 				} else
 					Utils.logUserOff(userEmail);
-				
-				Utils.disconnect(userEmail);
-				client.close();
+				    client.close();
 			}
 
 			// TODO : figure out when to shut the server

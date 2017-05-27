@@ -1,5 +1,8 @@
 package MAIN;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,10 +45,6 @@ public class Utils {
 		return messageID;
 	}
 	
-	public static void disconnect(String userEmail) {
-	    onlineUsers.get(userEmail).disconnected();
-	}
-
 	public static void queueMessage(String userEmail, int id, Location loc) {
 		QueueObject obj = new QueueObject(id, loc);
 		ArrayList<QueueObject> queue = null;
@@ -94,7 +93,7 @@ public class Utils {
 			if(!shouldIDeliver)
 				return messageIdList;
 
-			Message msg = null; /* Use MessageID List, to get Messages from harshini */ 
+			Message msg = DBUtils.getMessagesFromDB(messageIdList, userEmail); 
 			Mercury.addRequest(msg);
 		}
 		return null;
@@ -120,9 +119,31 @@ public class Utils {
 	}
 	
 	/*
-	 * Message is of type incoming Message, have to reformat it and send it accordingly
+	 * Can be called from two places:
+	 * - From the server, if A sends a message to B, and B is online and the location matches. In
+	 * this case, the message has to be formatted accordingly and sent
+	 * - From the mercury thread which in turn is called by the probe thread. In this case, the
+	 * message is got from the database and already properly formatted.
+	 * 
 	 */
-	public static void sendMessage(Message incomingMessage) {
+	public static void sendMessage(Message message, boolean toReformat) {
+	    if (toReformat) {
+	        String senderEmail = message.field1;
+	        String receiverEmail = message.field2;
+	        message.field4 = senderEmail;
+	        message.field1 = receiverEmail;
+	    }  	    
+	    
+	    // Establish the connection and send the message
+	    try {
+            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, onlineUsers.get(message.field1).port);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            out.writeObject(message);
+            out.flush();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 	    
 	}
 }

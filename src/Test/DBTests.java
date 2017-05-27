@@ -46,7 +46,6 @@ public class DBTests {
     }
     
     public static void main(String[] args) {
-        
         DBUtils.createDatabase();
         DBUtils.populateUsersTable("C:/Users/harshini/Downloads/DummyUsers.csv");
 //        System.out.println(DBUtils.checkUser("Harshini"));
