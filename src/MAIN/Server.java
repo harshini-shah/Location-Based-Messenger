@@ -11,8 +11,6 @@ import java.util.ArrayList;
  * username and password, verifies that username is in the database, and that the username and passwords match.
  * It then spawns a thread (instance of the ClientThread class) to handle it.
  * 
- *  TODO : All synchronization is left
- *  TODO : Flush everytime you write
  */
 public class Server {
 
