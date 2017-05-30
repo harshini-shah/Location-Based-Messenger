@@ -35,22 +35,20 @@ public class Server {
 			System.out.println("Accepted connection request from " + client.getInetAddress()); // Prints
 
 			// Get the input and output streams for the socket
-			System.out.println("BEFORE ESTABLISHING IN STREAM");
+            ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
+			
 			ObjectInputStream in = new ObjectInputStream(client.getInputStream());
 			
-			System.out.println("BEFORE ESTABLISHING OUT STREAM");
-			ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
+			
 			Message msg = null;
 			String userEmail = null;
 			
-			System.out.println("BEFORE MREADING MSG");
 			try {
 				msg = (Message) in.readObject();
 				System.out.println(msg);
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
-			System.out.println("READ WHATEVE");
 
 			if (msg.msgType == Message.MsgType.LOGIN_MSG) {
 				/*
@@ -170,7 +168,6 @@ public class Server {
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
 				userEmail = msg.field1;
-				System.out.println("IN log off ");
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
 				} else {
@@ -178,17 +175,15 @@ public class Server {
 					Message message = new Message();
                     message.msgType = msg.msgType;
                     message.field1 = userEmail;
-                    message.field2 = "FALSE";
-                    String wrongPasswordMsg = "ERROR: Wrong Password";
-                    message.field4 = wrongPasswordMsg;
+                    message.field2 = "TRUE";
+                    String logoffMsg = "Goodbye! Have a nice day.";
+                    message.field4 = logoffMsg;
                     out.writeObject(message);
                     out.flush();
 				    client.close();
 				    ProbeManager.closeProbeForUser(userEmail);
 				}
 			}
-			
-
 			// TODO : figure out when to shut the server
 		}
 	}

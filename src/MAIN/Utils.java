@@ -1,6 +1,7 @@
 package MAIN;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -83,7 +84,6 @@ public class Utils {
 		synchronized (messageQueueMutex) {
 			for (int i = 0; i < messageQueue.size();) {
 				QueueObject obj = messageQueue.get(i);
-				System.out.println("CURR LOCATION FOR " + userEmail + " is " + currentLocation.getRoomNum());
 				if (obj.getLocation().equals(currentLocation)) {
 					messageIdList.add(messageQueue.remove(i).getMessageID());
 					delivered = true;
@@ -131,6 +131,7 @@ public class Utils {
 	    try {
             Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, 6068);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
             out.writeObject(message);
             out.flush();
             out.close();
