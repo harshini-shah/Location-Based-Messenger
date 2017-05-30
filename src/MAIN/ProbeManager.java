@@ -7,7 +7,7 @@ public class ProbeManager {
 	private static HashMap<String, ProbeThread> mThreadMapping = null;
 
 	public static void startProbeFor(String email) {
-	    System.out.println("Probe starting");
+//	    System.out.println("Probe starting");
 		if (mThreadMapping == null)
 			mThreadMapping = new HashMap<String, ProbeThread>();
 
@@ -40,7 +40,7 @@ public class ProbeManager {
 
 		@Override
 		public void run() {
-		    System.out.println("Probe running");
+		    System.out.println("Probe running for " + email);
 			while (Utils.messageQueueForUserExists(email)) {
 				try {
 					Utils.deliverAllPossibleMessages(email, true);
@@ -52,7 +52,7 @@ public class ProbeManager {
 						System.out.print(E);
 				}
 			}
-			System.out.println("Probe Closing");
+			System.out.println("Probe Closing for " + email);
 			/* Closing Probe */
 			mThreadMapping.remove(email);
 		}
