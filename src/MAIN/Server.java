@@ -21,8 +21,8 @@ public class Server {
 	    //DBUtils.createConnection();
 	    DBUtils.cleanup();
 	    DBUtils.createDatabase();
-	    DBUtils.populateUsersTable("C:/Users/harshini/Downloads/DummyUsers.csv");
-        DBUtils.populateDummyUsersTable("C:/Users/harshini/Downloads/Dummy_users.csv");
+	    DBUtils.populateUsersTable("src/Test/DummyUsers.csv");
+        DBUtils.populateDummyUsersTable("src/Test/Dummy_users.csv");
         DBUtils.createTransactionsTable();
         
 		ServerSocket server = new ServerSocket(port);
@@ -45,7 +45,6 @@ public class Server {
 			
 			try {
 				msg = (Message) in.readObject();
-				System.out.println(msg);
 			} catch (ClassNotFoundException e) {
 				e.printStackTrace();
 			}
@@ -125,7 +124,6 @@ public class Server {
 						reply.field2 = "TRUE";
 						out.writeObject(reply);
 						out.flush();
-						System.out.println(reply);
 						client.close();
 					}
 				} else
@@ -151,12 +149,15 @@ public class Server {
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot send a message");
 				}
-
+				
+				String recipientEmail = msg.field2;
+				
 				// Check if the user is online and the location is a match
-				if (Utils.isUserOnline(userEmail) && Utils.getCurrentLocationForUser(userEmail).equals(new Location(msg.field3))) {
-					msg.msgType = Message.MsgType.NOTIFICATION;
-			        msg.field4 = msg.field1;
-			        msg.field1 = msg.field2;
+				if (Utils.isUserOnline(recipientEmail) && Utils.getCurrentLocationForUser(recipientEmail).equals(new Location(msg.field4))) {
+				    msg.msgType = Message.MsgType.NOTIFICATION;
+			        msg.field4 = userEmail;
+			        msg.field1 = recipientEmail;
+			        msg.field2 = null;
 				    Utils.sendMessage(msg);
 				    client.close();
 				} else {
@@ -197,8 +198,7 @@ public class Server {
 	}
 	
 	public static void main(String[] args) throws Exception {
-	    int port = 6066;
-	    Server server = new Server(port);
+	    Server server = new Server(Utils.SERVER_PORT_NUMBER);
 	}
 
 }
