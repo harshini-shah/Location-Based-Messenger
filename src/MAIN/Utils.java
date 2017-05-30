@@ -9,7 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Utils {
-
+    public static int SERVER_PORT_NUMBER = 6066;
+    public static int CLIENT_PORT_NUMBER = 6068;
 	private static Map<String, User> onlineUsers;
 	private static HashMap<String, Object> mutexBank = null;
 	private static HashMap<String, ArrayList<QueueObject>> messageQueueBank = null;
@@ -126,12 +127,12 @@ public class Utils {
 	 * 
 	 */
 	public static void sendMessage(Message message) {
-
 	    // Establish the connection and send the message
 	    try {
-            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, 6068);
+            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+            
             out.writeObject(message);
             out.flush();
             out.close();
