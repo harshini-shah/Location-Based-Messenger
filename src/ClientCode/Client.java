@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import MAIN.Message;
 import MAIN.Message.MsgType;
+import MAIN.Utils;
 
 public class Client {
 
@@ -25,7 +26,7 @@ public class Client {
 	Client() {
 		try {
 			String servername = "192.168.0.7";
-			int port = 6066;
+			int port = Utils.SERVER_PORT_NUMBER;
 			System.out.println("Enter the user id");
 			scanner = new Scanner(System.in);
 			String user_id = scanner.nextLine();
@@ -45,16 +46,16 @@ public class Client {
 
 			Message fromServer = (Message) inputStream.readObject();
 			System.out.println(fromServer);
-			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && ((fromServer.field1.compareTo(user_id) == 0))
-					&& ((fromServer.field2.compareTo("FALSE")) == 0)) {
+
+			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && fromServer.field1.equals(user_id)
+					&& fromServer.field2.equals("FALSE")) {
 				System.out.println("MESSAGE = " + fromServer.field3);
 				System.out.println("FROM = " + fromServer.field4);
 				System.exit(0);
 			}
 
-			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && ((fromServer.field1.compareTo(user_id) == 0))
-					&& ((fromServer.field2.compareTo("TRUE")) == 0) && (fromServer.field3 != null)
-					&& (fromServer.field4 != null)) {
+			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && fromServer.field1.equals(user_id)
+					&& fromServer.field2.equals("TRUE") && (fromServer.field3 != null) && (fromServer.field4 != null)) {
 				System.out.println("MESSAGE = " + fromServer.field3);
 				System.out.println("FROM = " + fromServer.field4);
 			}

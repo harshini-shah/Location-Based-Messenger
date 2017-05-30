@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.SocketException;
 
 import MAIN.Message;
+import MAIN.Utils;
 
 public class ClientReceive extends Thread {
 
@@ -35,8 +36,9 @@ public class ClientReceive extends Thread {
 	@Override
 	public void run() {
 
+		System.out.println("Client Receive is ONLINE WAITING");
 		try {
-			wait = new ServerSocket(6068);
+			wait = new ServerSocket(Utils.CLIENT_PORT_NUMBER);
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
@@ -44,6 +46,7 @@ public class ClientReceive extends Thread {
 		while (keepAlive) {
 			try {
 				Socket test_socket = wait.accept();
+				System.out.println("Client Receiver got request from Server Yayy ~!!");
 				outputStream = new ObjectOutputStream(test_socket.getOutputStream());
 				inputStream = new ObjectInputStream(test_socket.getInputStream());
 				Message fromServer = (Message) inputStream.readObject();
