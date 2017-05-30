@@ -326,7 +326,7 @@ public class DBUtils {
 		 * f4 - "owner(id1) | owner(id2) | owner(id3)..."
 		 */
         Message message = new Message();
-        message.field2 = receiverEmail;
+        message.field1 = receiverEmail;
         
         try {
             stmt = conn.createStatement();
@@ -350,13 +350,11 @@ public class DBUtils {
      */
     public static Message getMessagesFromDB(ArrayList<Integer> messageIdList, String userEmail) {
         Message message = new Message();
-        message.msgType = Message.MsgType.NOTIFICATION;
         
         String field3 = "";
         String field4 = "";
         
         for (int id : messageIdList) {
-            System.out.println("MESSAGE ID IS " + id);
             message = getMessage(id, userEmail);
             field3 += message.field3 + " | ";
             field4 += message.field4 + " | ";  
@@ -365,7 +363,7 @@ public class DBUtils {
         field3 = field3.substring(0, field3.length() - 3);
         field4 = field4.substring(0, field4.length() - 3);
         
-        message.field1 = userEmail;
+        message.msgType = Message.MsgType.NOTIFICATION;
         message.field3 = field3;
         message.field4 = field4;
         return message;

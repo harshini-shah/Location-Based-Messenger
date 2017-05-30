@@ -2,6 +2,7 @@ package ClientCode;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
@@ -11,55 +12,57 @@ import MAIN.Message;
 public class ClientReceive extends Thread {
 
 	private String user_id;
-	private static ObjectInputStream inputStream = null;
-	boolean shouldIAllow;
+	private ObjectInputStream inputStream;
+	private ObjectOutputStream outputStream;
+	private boolean keepAlive;
+
 	public ClientReceive(String user_id) {
 		this.user_id = user_id;
-		shouldIAllow = true;
+		keepAlive = true;
 	}
 
 	public void down() {
 		try {
 			wait.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		shouldIAllow = false;
+		keepAlive = false;
 	}
-	ServerSocket wait = null;
+
+	private ServerSocket wait = null;
+
 	@Override
 	public void run() {
 
-		
 		try {
 			wait = new ServerSocket(6068);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		while (shouldIAllow) { // confirm this
-			try {
 
+		while (keepAlive) {
+			try {
 				Socket test_socket = wait.accept();
+				outputStream = new ObjectOutputStream(test_socket.getOutputStream());
 				inputStream = new ObjectInputStream(test_socket.getInputStream());
 				Message fromServer = (Message) inputStream.readObject();
 
-				if ((fromServer.msgType == Message.MsgType.NOTIFICATION)
-						&& ((fromServer.field1.compareTo(user_id)) == 0)) {
+				if (fromServer.msgType == Message.MsgType.NOTIFICATION && fromServer.field1.equals(user_id)) {
 					System.out.println("MESSAGE = " + fromServer.field3);
 					System.out.println("FROM = " + fromServer.field4);
+				} else {
+					System.out.println("We have an unrecognized message from Server " + fromServer);
 				}
-
-				// if(shouldStop)
-				// break;
 			} catch (SocketException se) {
-				System.out.println("IZZAT SE CLOSE KIA");
+				System.out.println("Asked to Kill Client Recieve !");
 			} catch (IOException e) {
 				e.printStackTrace();
 			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				outputStream = null;
+				inputStream = null;
 			}
 		}
 	}

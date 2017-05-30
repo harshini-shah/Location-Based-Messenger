@@ -4,6 +4,6 @@ import MAIN.DBUtils;
 
 public class ChangeLocation {
     public static void main(String[] args) {
-        DBUtils.changeLocation("Vignesh", "DBH 8099");
+        DBUtils.changeLocation("Vignesh", "DBH 2011");
     }
 }
