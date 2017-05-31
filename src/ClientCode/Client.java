@@ -25,7 +25,7 @@ public class Client {
 
 	Client() {
 		try {
-			String servername = "192.168.0.7";
+			String servername = "169.234.0.27";
 			int port = Utils.SERVER_PORT_NUMBER;
 			System.out.println("Enter the user id");
 			scanner = new Scanner(System.in);
@@ -47,15 +47,18 @@ public class Client {
 			Message fromServer = (Message) inputStream.readObject();
 			System.out.println(fromServer);
 
+			String[] roomNos = msg.field2.split("|");
+			String auth = roomNos[0];
+
 			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && fromServer.field1.equals(user_id)
-					&& fromServer.field2.equals("FALSE")) {
+					&& auth.equals("FALSE")) {
 				System.out.println("MESSAGE = " + fromServer.field3);
 				System.out.println("FROM = " + fromServer.field4);
 				System.exit(0);
 			}
 
 			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && fromServer.field1.equals(user_id)
-					&& fromServer.field2.equals("TRUE") && (fromServer.field3 != null) && (fromServer.field4 != null)) {
+					&& auth.equals("TRUE") && (fromServer.field3 != null) && (fromServer.field4 != null)) {
 				System.out.println("MESSAGE = " + fromServer.field3);
 				System.out.println("FROM = " + fromServer.field4);
 			}

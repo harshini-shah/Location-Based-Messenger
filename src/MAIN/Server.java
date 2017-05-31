@@ -24,7 +24,9 @@ public class Server {
 	    DBUtils.populateUsersTable("src/Test/DummyUsers.csv");
         DBUtils.populateDummyUsersTable("src/Test/Dummy_users.csv");
         DBUtils.createTransactionsTable();
-        
+ 
+        String roomNos = "TRUE|"+Utils.getRoomNos();
+
 		ServerSocket server = new ServerSocket(port);
 		//server.setSoTimeout(700000);
 
@@ -110,7 +112,7 @@ public class Server {
 					 * CREATE MSG OBJ
 					 * msgType = same as before
 					 * f1 - harshini@uci.edu
-					 * f2 - "TRUE"
+					 * f2 - "TRUE | room nos "
 					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
@@ -121,7 +123,7 @@ public class Server {
 						Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
 						
 						reply.msgType = Message.MsgType.LOGIN_MSG;
-						reply.field2 = "TRUE";
+						reply.field2 = roomNos;
 						out.writeObject(reply);
 						out.flush();
 						client.close();
@@ -132,11 +134,12 @@ public class Server {
 				if (sendEmptyAffirmation) {
 					/**
 					 * CREATE MSG OBJ msgType = same as before
-					 * f1 - harshini@uci.edu 
-					 * f2 - "TRUE" 
+					 * f1 - harshini@uci.edu
+					 * f2 - "TRUE | room nos" 
 					 * f3 - null 
 					 * f4 - null
 					 */
+					msg.field2 = roomNos;
 					out.writeObject(msg);
 					out.flush();
 					client.close();
