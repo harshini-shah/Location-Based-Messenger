@@ -3,8 +3,10 @@ package ClientCode;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.Scanner;
 
 import MAIN.Message;
@@ -17,7 +19,10 @@ public class Client {
 	private ObjectInputStream inputStream = null;
 	private ObjectOutputStream outputStream = null;
 	private ClientReceive clientReceive;
+	private IPObserver observer;
 	private Scanner scanner;
+	private String servername, user_id;
+	private int port;
 
 	public static void main(String args[]) {
 		new Client();
@@ -25,11 +30,11 @@ public class Client {
 
 	Client() {
 		try {
-			String servername = "169.234.0.27";
-			int port = Utils.SERVER_PORT_NUMBER;
+			servername = "169.234.0.27";
+			port = Utils.SERVER_PORT_NUMBER;
 			System.out.println("Enter the user id");
 			scanner = new Scanner(System.in);
-			String user_id = scanner.nextLine();
+			user_id = scanner.nextLine();
 
 			System.out.println("Enter the Password");
 			String password = scanner.nextLine();
@@ -69,6 +74,9 @@ public class Client {
 			 */
 			clientReceive = new ClientReceive(user_id);
 			clientReceive.start();
+			
+			observer = new IPObserver(this, InetAddress.getLocalHost());
+			observer.start();
 
 			System.out.println("Enter your choice 1. Send a message 2. Logout");
 			int choice = scanner.nextInt();
@@ -125,9 +133,28 @@ public class Client {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		} finally {
+			observer.down();
 			clientReceive.down();
 			scanner.close();
 		}
 
+	}
+
+	public void ipUpdated() {
+		try {
+			Message msg = new Message();
+			msg.msgType = Message.MsgType.IP_UPDATE;
+			msg.field1 = user_id;
+
+			test_socket = new Socket(servername, port);
+			outputStream = new ObjectOutputStream(test_socket.getOutputStream());
+			inputStream = new ObjectInputStream(test_socket.getInputStream());
+			outputStream.writeObject(msg);
+			outputStream.flush();
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

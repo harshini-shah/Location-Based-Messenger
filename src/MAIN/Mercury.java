@@ -46,10 +46,14 @@ public class Mercury {
 				}
 
 				if (msg != null) {
-				    Utils.sendMessage(msg);
+					if (!Utils.sendMessage(msg)) {
+						synchronized (mutex) {
+							mRequestQueue.add(msg);
+							mutex.notifyAll();
+						}
+					}
 				}
 			}
 		}
-
 	}
 }

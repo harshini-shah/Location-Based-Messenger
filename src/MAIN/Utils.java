@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -57,13 +58,9 @@ public class Utils {
 		onlineUsers.put(email, userObj);
 	}
 
-	public static int queueMessage(String userEmail, String message, Location loc, int messageID) {
-		queueMessage(userEmail, messageID, loc);
-		return messageID;
-	}
-	
-	public static void queueMessage(String userEmail, int id, Location loc) {
-		QueueObject obj = new QueueObject(id, loc);
+	public static void queueMessage(String userEmail, Location loc, int messageID) {
+
+		QueueObject obj = new QueueObject(messageID, loc);
 		ArrayList<QueueObject> queue = null;
 		Object messageQueueMutex = null;
 		if (messageQueueBank.get(userEmail) == null) {
@@ -141,20 +138,22 @@ public class Utils {
 	 * message is got from the database and already properly formatted.
 	 * 
 	 */
-	public static void sendMessage(Message message) {
-	    // Establish the connection and send the message
-	    try {
-            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            
-            out.writeObject(message);
-            out.flush();
-            out.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-	    
+	public static boolean sendMessage(Message message) {
+		try {
+			Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+			out.writeObject(message);
+			out.flush();
+			out.close();
+		} catch (ConnectException e) {
+			logUserOff(message.field1);
+			return false;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return true;
 	}
 
 	public static String getRoomNos() throws Exception {
