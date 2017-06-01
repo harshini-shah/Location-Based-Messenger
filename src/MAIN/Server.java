@@ -51,7 +51,14 @@ public class Server {
 				e.printStackTrace();
 			}
 
-			if (msg.msgType == Message.MsgType.LOGIN_MSG) {
+			if (msg.msgType == Message.MsgType.IP_UPDATE) {
+				client.close();
+
+				/* Case to update the IP of the User */
+				userEmail = msg.field1;
+				if(Utils.isUserOnline(msg.field1))
+					Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
+			} else if (msg.msgType == Message.MsgType.LOGIN_MSG) {
 				/*
 				 * Handle a Login Required
 				 * TODO : make sure that the user is "disconnected" after you close the connection
@@ -104,7 +111,7 @@ public class Server {
 					continue;
 				}
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), 6068));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
 
 				boolean sendEmptyAffirmation = false;
 				if (Utils.messageQueueForUserExists(userEmail)) {
