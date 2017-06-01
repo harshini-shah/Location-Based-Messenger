@@ -172,7 +172,7 @@ public class Server {
 				    client.close();
 				} else {
 				    int messageID = DBUtils.addTransaction(msg);
-					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
+					Utils.queueMessage(msg.field2, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
 					client.close();
 				}
