@@ -59,19 +59,18 @@ public class Mercury {
 				if (mMercuryObj != null) {
 					boolean delivered = Utils.sendMessage(mMercuryObj.msg);
 					for (int i : mMercuryObj.msgIds)
-						if (delivered) {
+						if (delivered && mMercuryObj.msg.msgType != Message.MsgType.ACK) {
 							ProbeManager.addDeliveryNotice(mMercuryObj.msg.field1, i);
-							if (mMercuryObj.msg.msgType != Message.MsgType.ACK) {
-								String users[] = mMercuryObj.msg.field4.split("\\|");
-								for (int x = 0; x < users.length; x++) {
-									Message msg = new Message();
-									msg.msgType = Message.MsgType.ACK;
-									msg.field1 = users[x].trim();
-									msg.field3 = "Message " + mMercuryObj.msg.field3 + " delivered to "
-											+ mMercuryObj.msg.field4;
-									msg.field4 = "SERVER";
-									Utils.queueMessage(msg.field1, null, DBUtils.addTransaction(msg));
-								}
+							String users[] = mMercuryObj.msg.field4.split("\\|");
+							for (int x = 0; x < users.length; x++) {
+								Message msg = new Message();
+								msg.msgType = Message.MsgType.ACK;
+								msg.field1 = users[x].trim();
+								msg.field3 = "Message " + mMercuryObj.msg.field3 + " delivered to "
+										+ mMercuryObj.msg.field4;
+								msg.field4 = "SERVER";
+								Utils.queueMessage(msg.field1, null, DBUtils.addTransaction(msg));
+
 							}
 						} else if (mMercuryObj.msg.msgType != Message.MsgType.ACK)
 							ProbeManager.addUndeliveredNotice(mMercuryObj.msg.field1, i);
