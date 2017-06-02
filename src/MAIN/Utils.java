@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import MAIN.QueueObject.STATUS;
+
 public class Utils {
     public static int SERVER_PORT_NUMBER = 6066;
 	public static int CLIENT_PORT_NUMBER = 6068;
@@ -61,6 +63,9 @@ public class Utils {
 	public static void queueMessage(String userEmail, Location loc, int messageID) {
 
 		QueueObject obj = new QueueObject(messageID, loc);
+		if(loc == null)
+			obj.updateStatus(QueueObject.STATUS.ACK);
+
 		ArrayList<QueueObject> queue = null;
 		Object messageQueueMutex = null;
 		if (messageQueueBank.get(userEmail) == null) {
@@ -87,20 +92,54 @@ public class Utils {
 	    return DBUtils.getCurrentLocationForUser(userEmail);
 	}
 
-	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver) {
+	public static ArrayList<Integer> getAllDeliverableMessages(String userEmail) {
+		return deliverAllPossibleMessages(userEmail, false, null, null);
+	}
+
+	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver,
+			ArrayList<Integer> deliveredList, ArrayList<Integer> unDeliveredList) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
 		Location currentLocation = getCurrentLocationForUser(userEmail);
 		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
+		ArrayList<Integer> ackMessages = new ArrayList<Integer>();
 
 		synchronized (messageQueueMutex) {
 			for (int i = 0; i < messageQueue.size();) {
 				QueueObject obj = messageQueue.get(i);
-				if (obj.getLocation().equals(currentLocation)) {
-					messageIdList.add(messageQueue.remove(i).getMessageID());
+
+				if(obj.getStatus() == STATUS.ACK) {
+					messageQueue.remove(obj);
+					ackMessages.add(obj.getMessageID());
+				} else if (deliveredList != null && obj.getStatus() == STATUS.WAITING) {
+					synchronized (deliveredList) {
+						if (deliveredList.contains(obj.getMessageID())) {
+							messageQueue.remove(obj);
+							deliveredList.remove((Integer) obj.getMessageID());
+							deliveredList.notifyAll();
+						} else
+							i++;
+					}
+				} else if (unDeliveredList != null && obj.getStatus() == STATUS.WAITING) {
+					synchronized (unDeliveredList) {
+						if (unDeliveredList.contains(obj.getMessageID())) {
+							obj.updateStatus(STATUS.NEW);
+							unDeliveredList.remove((Integer) obj.getMessageID());
+							unDeliveredList.notifyAll();
+						} else
+							i++;
+					}
+				} else if (obj.getStatus() == STATUS.NEW && obj.getLocation().equals(currentLocation)) {
+					messageIdList.add(obj.getMessageID());
+					obj.updateStatus(STATUS.WAITING);
 					delivered = true;
-				} else
+				} else if (!shouldIDeliver && obj.getStatus() == STATUS.NEW && !obj.decrementProbe()) {
+					/* Probe Count is over, need to drop the message; probably
+					 * need to send Message to Original Sender that this message
+					 * hasn't been delivered */
+					messageQueue.remove(obj);
+				} else 
 					i++;
 			}
 
@@ -108,11 +147,14 @@ public class Utils {
 		}
 
 		if (delivered) {
+			Message msg = DBUtils.getMessagesFromDB(ackMessages, userEmail); 
+			Mercury.addRequest(messageIdList, msg);
+			
 			if(!shouldIDeliver)
 				return messageIdList;
 
-			Message msg = DBUtils.getMessagesFromDB(messageIdList, userEmail); 
-			Mercury.addRequest(msg);
+			Message msg1 = DBUtils.getMessagesFromDB(messageIdList, userEmail); 
+			Mercury.addRequest(messageIdList, msg1);
 		}
 		return null;
 	}
@@ -148,7 +190,6 @@ public class Utils {
 			out.flush();
 			out.close();
 		} catch (ConnectException e) {
-			logUserOff(message.field1);
 			return false;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -177,7 +218,7 @@ public class Utils {
 						if(list.length() == 0)
 							list = token;
 						else 
-							list += "|"+token;
+							list += " | "+token;
 						state = 0;
 						token = "";
 					} else

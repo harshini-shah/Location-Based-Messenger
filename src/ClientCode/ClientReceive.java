@@ -54,8 +54,8 @@ public class ClientReceive extends Thread {
 				if (fromServer.msgType == Message.MsgType.NOTIFICATION && fromServer.field1.equals(user_id)) {
 					System.out.println("MESSAGE = " + fromServer.field3);
 					System.out.println("FROM = " + fromServer.field4);
-				} else {
-					System.out.println("We have an unrecognized message from Server " + fromServer);
+				} else if (fromServer.msgType == Message.MsgType.ACK && fromServer.field1.equals(user_id)) {
+					System.out.println("ACK = " + fromServer.field3);
 				}
 			} catch (SocketException se) {
 				System.out.println("Asked to Kill Client Recieve !");
