@@ -137,23 +137,51 @@ public class Utils {
 	 * - From the mercury thread which in turn is called by the probe thread. In this case, the
 	 * message is got from the database and already properly formatted.
 	 * 
+	 * The acknowledgement is a Message object with field 2 set to true or false depending on 
+	 * whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
-		try {
-			Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
-			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-
-			out.writeObject(message);
-			out.flush();
-			out.close();
-		} catch (ConnectException e) {
-			logUserOff(message.field1);
-			return false;
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (sendMessageHelper(message)) {
+		    return true;
+		} else {
+		    if (sendMessageHelper(message)) {
+		        return true;
+		    } else {
+		        if (sendMessageHelper(message)) {
+		            return true;
+		        } else {
+		            System.out.println("Sendomg message to " + message.field1 + " failed.");
+		            return false;
+		        }
+		    }
 		}
-		return true;
+	}
+	
+	private static boolean sendMessageHelper(Message message) {
+	    try {
+            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+
+            out.writeObject(message);
+            out.flush();
+            Message ack = (Message)in.readObject();
+            out.close();
+            
+            if (ack.field2.equals("TRUE")) {
+                return true;
+            }
+            
+            return false;
+        } catch (ConnectException e) {
+            logUserOff(message.field1);
+            return false;
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
 	}
 
 	public static String getRoomNos() throws Exception {
