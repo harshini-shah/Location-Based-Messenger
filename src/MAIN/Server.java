@@ -22,7 +22,9 @@ public class Server {
 	    DBUtils.populateUsersTable("src/Test/DummyUsers.csv");
         DBUtils.populateDummyUsersTable("src/Test/Dummy_users.csv");
         DBUtils.createTransactionsTable();
-        
+ 
+        String roomNos = "TRUE|"+Utils.getRoomNos();
+
 		ServerSocket server = new ServerSocket(port);
 		//server.setSoTimeout(700000);
 
@@ -47,7 +49,14 @@ public class Server {
 				e.printStackTrace();
 			}
 
-			if (msg.msgType == Message.MsgType.LOGIN_MSG) {
+			if (msg.msgType == Message.MsgType.IP_UPDATE) {
+				client.close();
+
+				/* Case to update the IP of the User */
+				userEmail = msg.field1;
+				if(Utils.isUserOnline(msg.field1))
+					Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
+			} else if (msg.msgType == Message.MsgType.LOGIN_MSG) {
 				/*
 				 * Handle a Login Required
 				 * TODO : make sure that the user is "disconnected" after you close the connection
@@ -100,7 +109,7 @@ public class Server {
 					continue;
 				}
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), 6068));
+				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
 
 				boolean sendEmptyAffirmation = false;
 				if (Utils.messageQueueForUserExists(userEmail)) {
@@ -108,7 +117,7 @@ public class Server {
 					 * CREATE MSG OBJ
 					 * msgType = same as before
 					 * f1 - harshini@uci.edu
-					 * f2 - "TRUE"
+					 * f2 - "TRUE | room nos "
 					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
@@ -119,7 +128,7 @@ public class Server {
 						Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
 						
 						reply.msgType = Message.MsgType.LOGIN_MSG;
-						reply.field2 = "TRUE";
+						reply.field2 = roomNos;
 						out.writeObject(reply);
 						out.flush();
 						client.close();
@@ -130,11 +139,12 @@ public class Server {
 				if (sendEmptyAffirmation) {
 					/**
 					 * CREATE MSG OBJ msgType = same as before
-					 * f1 - harshini@uci.edu 
-					 * f2 - "TRUE" 
+					 * f1 - harshini@uci.edu
+					 * f2 - "TRUE | room nos" 
 					 * f3 - null 
 					 * f4 - null
 					 */
+					msg.field2 = roomNos;
 					out.writeObject(msg);
 					out.flush();
 					client.close();
@@ -160,7 +170,7 @@ public class Server {
 				    client.close();
 				} else {
 				    int messageID = DBUtils.addTransaction(msg);
-					Utils.queueMessage(msg.field2, msg.field3, new Location (msg.field4), messageID);
+					Utils.queueMessage(msg.field2, new Location (msg.field4), messageID);
 					ProbeManager.startProbeFor(msg.field2);
 					client.close();
 				}

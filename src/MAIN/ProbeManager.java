@@ -7,7 +7,7 @@ public class ProbeManager {
 	private static HashMap<String, ProbeThread> mThreadMapping = null;
 
 	public static void startProbeFor(String email) {
-//	    System.out.println("Probe starting");
+
 		if (mThreadMapping == null)
 			mThreadMapping = new HashMap<String, ProbeThread>();
 
