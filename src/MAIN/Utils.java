@@ -141,23 +141,6 @@ public class Utils {
 	 * whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
-		if (sendMessageHelper(message)) {
-		    return true;
-		} else {
-		    if (sendMessageHelper(message)) {
-		        return true;
-		    } else {
-		        if (sendMessageHelper(message)) {
-		            return true;
-		        } else {
-		            System.out.println("Sendomg message to " + message.field1 + " failed.");
-		            return false;
-		        }
-		    }
-		}
-	}
-	
-	private static boolean sendMessageHelper(Message message) {
 	    try {
             Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
@@ -165,23 +148,16 @@ public class Utils {
 
             out.writeObject(message);
             out.flush();
-            Message ack = (Message)in.readObject();
-            out.close();
-            
-            if (ack.field2.equals("TRUE")) {
-                return true;
-            }
-            
-            return false;
         } catch (ConnectException e) {
             logUserOff(message.field1);
+            System.out.println("SEnd message failed");
             return false;
         } catch (IOException e) {
+            System.out.println("Send message failed");
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            return false;
         }
-        return false;
+        return true;
 	}
 
 	public static String getRoomNos() throws Exception {
