@@ -137,23 +137,27 @@ public class Utils {
 	 * - From the mercury thread which in turn is called by the probe thread. In this case, the
 	 * message is got from the database and already properly formatted.
 	 * 
+	 * The acknowledgement is a Message object with field 2 set to true or false depending on 
+	 * whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
-		try {
-			Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
-			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+	    try {
+            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-			out.writeObject(message);
-			out.flush();
-			out.close();
-		} catch (ConnectException e) {
-			logUserOff(message.field1);
-			return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return true;
+            out.writeObject(message);
+            out.flush();
+        } catch (ConnectException e) {
+            logUserOff(message.field1);
+            System.out.println("SEnd message failed");
+            return false;
+        } catch (IOException e) {
+            System.out.println("Send message failed");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
 	}
 
 	public static String getRoomNos() throws Exception {
