@@ -8,13 +8,20 @@ package MAIN;
  */
 public class Location {
 	private String roomNum;
-
+	
+	public enum Distance {VERY_NEAR,
+	    NEAR,
+	    FAR,
+	    VERY_FAR,
+	    };
 	/* Have added this for future Scalability */
 	private boolean isGPS = false;
+	public Distance distance;
 
 	Location (String roomNum) {
 		/*To be used for DBH*/
 		this.roomNum = roomNum;
+		this.distance = Distance.VERY_FAR;
 	}
 	
 	Location () {
@@ -36,5 +43,13 @@ public class Location {
 		if (isGPS)
 			return false;
 		return loc.roomNum.equals(roomNum);
+	}
+	
+	/*
+	 * Implement the logic for comparison of two Location objects,
+	 * and depending on the result, return the right value of 'Distance'
+	 */
+	public Distance getDistance(Location location) {
+	    return Distance.VERY_NEAR;
 	}
 }

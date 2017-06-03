@@ -15,6 +15,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import MAIN.Location.Distance;
+
 public class Utils {
     public static int SERVER_PORT_NUMBER = 6066;
 	public static int CLIENT_PORT_NUMBER = 6068;
@@ -87,7 +89,7 @@ public class Utils {
 	    return DBUtils.getCurrentLocationForUser(userEmail);
 	}
 
-	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver) {
+	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver, Location.Distance distance) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
@@ -101,6 +103,9 @@ public class Utils {
 					messageIdList.add(messageQueue.remove(i).getMessageID());
 					delivered = true;
 				} else
+				    // Compare the distances and set the distance metric accordingly
+				    Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
+				    
 					i++;
 			}
 
@@ -117,7 +122,13 @@ public class Utils {
 		return null;
 	}
 
-	private static Object getMutexForUser(String userEmail) {
+	private static void updateDistance(Distance finalDistance, Distance currDistance) {
+        if (finalDistance.compareTo(currDistance) > 0) {
+            finalDistance = currDistance;
+        }
+    }
+
+    private static Object getMutexForUser(String userEmail) {
 		return mutexBank.get(userEmail);
 	}
 
@@ -198,4 +209,22 @@ public class Utils {
 		}
 		return list;
 	}
+
+	/*
+	 * Provides a mapping of the distance metric to the sleep time.
+	 */
+    public static long getSleepTime(Distance distance) {
+        switch(distance) {
+        case VERY_NEAR:
+            return 150L;
+        case NEAR:
+            return 150000L;
+        case FAR:
+            return 15000000000L;
+        case VERY_FAR:
+            return 150000000000000000L;
+        }
+        
+        return 150L;
+    }
 }
