@@ -52,13 +52,12 @@ public class ClientReceive extends Thread {
 				Message fromServer = (Message) inputStream.readObject();
 
 				if (fromServer.msgType == Message.MsgType.NOTIFICATION && fromServer.field1.equals(user_id)) {
-					System.out.println("MESSAGE = " + fromServer.field3);
-					System.out.println("FROM = " + fromServer.field4);
+				    System.out.println("MESSAGE = " + fromServer.field3);
+					  System.out.println("FROM = " + fromServer.field4);
 				} else if (fromServer.msgType == Message.MsgType.ACK && fromServer.field1.equals(user_id)) {
-					System.out.println("ACK = " + fromServer.field3);
+					  System.out.println("ACK = " + fromServer.field3);
 				} else
-					System.out.println("We have an unrecognized message from Server " + fromServer);
-
+					  System.out.println("We have an unrecognized message from Server " + fromServer);
 			} catch (SocketException se) {
 				System.out.println("Asked to Kill Client Recieve !");
 			} catch (IOException e) {

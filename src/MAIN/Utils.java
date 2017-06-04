@@ -14,11 +14,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
 import MAIN.QueueObject.STATUS;
+import MAIN.Location.Distance;
 
 public class Utils {
-    public static int SERVER_PORT_NUMBER = 6066;
+  public static int SERVER_PORT_NUMBER = 6066;
 	public static int CLIENT_PORT_NUMBER = 6068;
 	private static String prefix = "\"name\":\"";
 	private static char termination = '\"';
@@ -93,11 +93,11 @@ public class Utils {
 	}
 
 	public static ArrayList<Integer> getAllDeliverableMessages(String userEmail) {
-		return deliverAllPossibleMessages(userEmail, false, null, null);
+		return deliverAllPossibleMessages(userEmail, false, null, null, null);
 	}
 
 	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver,
-			ArrayList<Integer> deliveredList, ArrayList<Integer> unDeliveredList) {
+			ArrayList<Integer> deliveredList, ArrayList<Integer> unDeliveredList, Location.Distance distance) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
@@ -139,8 +139,11 @@ public class Utils {
 					 * need to send Message to Original Sender that this message
 					 * hasn't been delivered */
 					messageQueue.remove(obj);
-				} else 
-					i++;
+				} else {
+				    if(distance != null)
+				        Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
+
+					  i++;
 			}
 
 			messageQueueMutex.notifyAll();
@@ -159,7 +162,13 @@ public class Utils {
 		return null;
 	}
 
-	private static Object getMutexForUser(String userEmail) {
+	private static void updateDistance(Distance finalDistance, Distance currDistance) {
+        if (finalDistance.compareTo(currDistance) < 0) {
+            finalDistance = currDistance;
+        }
+    }
+
+    private static Object getMutexForUser(String userEmail) {
 		return mutexBank.get(userEmail);
 	}
 
@@ -179,22 +188,33 @@ public class Utils {
 	 * - From the mercury thread which in turn is called by the probe thread. In this case, the
 	 * message is got from the database and already properly formatted.
 	 * 
+	 * The acknowledgement is a Message object with field 2 set to true or false depending on 
+	 * whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
-		try {
-			Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
-			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+	    try {
+            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
+            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-			out.writeObject(message);
-			out.flush();
-			out.close();
-		} catch (ConnectException e) {
-			return false;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return true;
+            out.writeObject(message);
+            out.flush();
+        } catch (ConnectException e) {
+            System.out.println("ConnectException: Send message failed");
+            e.printStackTrace();
+            return false;
+        } catch (IOException e) {
+            System.out.println("IOException: Send message failed");
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            System.out.println("Exception: Send message failed");
+            e.printStackTrace();
+            return false;
+        } finally {
+            socket.close();
+        }
+        return true;
 	}
 
 	public static String getRoomNos() throws Exception {
@@ -235,4 +255,22 @@ public class Utils {
 		}
 		return list;
 	}
+
+	/*
+	 * Provides a mapping of the distance metric to the sleep time.
+	 */
+    public static long getSleepTime(Distance distance) {
+        switch(distance) {
+        case VERY_NEAR:
+            return 150L;
+        case NEAR:
+            return 150/*000*/L;
+        case FAR:
+            return 150/*00000000*/L;
+        case VERY_FAR:
+            return 150/*000000000000000*/L;
+        }
+        
+        return 150L;
+    }
 }

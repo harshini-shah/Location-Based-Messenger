@@ -90,7 +90,9 @@ public class ProbeManager {
 
 	private static class ProbeThread extends Thread {
 		private String email = null;
+
 		private ArrayList<Integer> deliveredMessageList = null, unDeliveredMessageList = null;
+		Location.Distance distance = Location.Distance.VERY_FAR;
 
 		private ProbeThread(String eMail) {
 			email = eMail;
@@ -125,8 +127,8 @@ public class ProbeManager {
 			System.out.println("Probe running for " + email);
 			while (Utils.messageQueueForUserExists(email)) {
 				try {
-					Utils.deliverAllPossibleMessages(email, true, deliveredMessageList, unDeliveredMessageList);
-					Thread.sleep(150);
+					Utils.deliverAllPossibleMessages(email, true, deliveredMessageList, unDeliveredMessageList, distance);
+					Thread.sleep(Utils.getSleepTime(distance));
 				} catch (InterruptedException E) {
 					if (!Utils.isUserOnline(email))
 						break;
