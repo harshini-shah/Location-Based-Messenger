@@ -52,8 +52,18 @@ public class ClientReceive extends Thread {
 				Message fromServer = (Message) inputStream.readObject();
 
 				if (fromServer.msgType == Message.MsgType.NOTIFICATION && fromServer.field1.equals(user_id)) {
-					System.out.println("MESSAGE = " + fromServer.field3);
-					System.out.println("FROM = " + fromServer.field4);
+					if(!fromServer.field3.contains("|")){
+						System.out.println("MESSAGE = " + fromServer.field3);
+						System.out.println("FROM = " + fromServer.field4);
+					}
+					else{
+						String[] msg_split = fromServer.field3.split("\\|");
+						String[] sender_split = fromServer.field4.split("\\|");
+						for (int i =0; i < msg_split.length; i++){
+							System.out.println("MESSAGE = " + msg_split[i]);
+							System.out.println("FROM = "+sender_split[i]);
+						}
+					}
 				} else {
 					System.out.println("We have an unrecognized message from Server " + fromServer);
 				}
