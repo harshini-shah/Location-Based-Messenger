@@ -15,14 +15,14 @@ public class QueueObject {
 	private STATUS mStatus;
 
 	public static enum STATUS {
-		NEW, WAITING, ACK
+		TOBESENT, WAITING, ACK
 	};
 
 	public QueueObject(int messageID, Location location) {
 		this.messageID = messageID;
 		this.location = location;
 		this.probePings = 10;
-		mStatus = STATUS.NEW;
+		mStatus = STATUS.TOBESENT;
 	}
 
 	public STATUS getStatus() {

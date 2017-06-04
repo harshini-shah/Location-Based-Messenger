@@ -124,17 +124,17 @@ public class Utils {
 				} else if (unDeliveredList != null && obj.getStatus() == STATUS.WAITING) {
 					synchronized (unDeliveredList) {
 						if (unDeliveredList.contains(obj.getMessageID())) {
-							obj.updateStatus(STATUS.NEW);
+							obj.updateStatus(STATUS.TOBESENT);
 							unDeliveredList.remove((Integer) obj.getMessageID());
 							unDeliveredList.notifyAll();
 						} else
 							i++;
 					}
-				} else if (obj.getStatus() == STATUS.NEW && obj.getLocation().equals(currentLocation)) {
+				} else if (obj.getStatus() == STATUS.TOBESENT && obj.getLocation().equals(currentLocation)) {
 					messageIdList.add(obj.getMessageID());
 					obj.updateStatus(STATUS.WAITING);
 					delivered = true;
-				} else if (!shouldIDeliver && obj.getStatus() == STATUS.NEW && !obj.decrementProbe()) {
+				} else if (!shouldIDeliver && obj.getStatus() == STATUS.TOBESENT && !obj.decrementProbe()) {
 					/* Probe Count is over, need to drop the message; probably
 					 * need to send Message to Original Sender that this message
 					 * hasn't been delivered */
