@@ -14,11 +14,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
+import MAIN.QueueObject.STATUS;
 import MAIN.Location.Distance;
 
 public class Utils {
-    public static int SERVER_PORT_NUMBER = 6066;
+  public static int SERVER_PORT_NUMBER = 6066;
 	public static int CLIENT_PORT_NUMBER = 6068;
 	private static String prefix = "\"name\":\"";
 	private static char termination = '\"';
@@ -63,6 +63,9 @@ public class Utils {
 	public static void queueMessage(String userEmail, Location loc, int messageID) {
 
 		QueueObject obj = new QueueObject(messageID, loc);
+		if(loc == null)
+			obj.updateStatus(QueueObject.STATUS.ACK);
+
 		ArrayList<QueueObject> queue = null;
 		Object messageQueueMutex = null;
 		if (messageQueueBank.get(userEmail) == null) {
@@ -89,34 +92,72 @@ public class Utils {
 	    return DBUtils.getCurrentLocationForUser(userEmail);
 	}
 
-	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver, Location.Distance distance) {
+	public static ArrayList<Integer> getAllDeliverableMessages(String userEmail) {
+		return deliverAllPossibleMessages(userEmail, false, null, null, null);
+	}
+
+	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver,
+			ArrayList<Integer> deliveredList, ArrayList<Integer> unDeliveredList, Location.Distance distance) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
 		Location currentLocation = getCurrentLocationForUser(userEmail);
 		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
+		ArrayList<Integer> ackMessages = new ArrayList<Integer>();
 
 		synchronized (messageQueueMutex) {
 			for (int i = 0; i < messageQueue.size();) {
 				QueueObject obj = messageQueue.get(i);
-				if (obj.getLocation().equals(currentLocation)) {
-					messageIdList.add(messageQueue.remove(i).getMessageID());
+
+				if(obj.getStatus() == STATUS.ACK) {
+					messageQueue.remove(obj);
+					ackMessages.add(obj.getMessageID());
+				} else if (deliveredList != null && obj.getStatus() == STATUS.WAITING) {
+					synchronized (deliveredList) {
+						if (deliveredList.contains(obj.getMessageID())) {
+							messageQueue.remove(obj);
+							deliveredList.remove((Integer) obj.getMessageID());
+							deliveredList.notifyAll();
+						} else
+							i++;
+					}
+				} else if (unDeliveredList != null && obj.getStatus() == STATUS.WAITING) {
+					synchronized (unDeliveredList) {
+						if (unDeliveredList.contains(obj.getMessageID())) {
+							obj.updateStatus(STATUS.TOBESENT);
+							unDeliveredList.remove((Integer) obj.getMessageID());
+							unDeliveredList.notifyAll();
+						} else
+							i++;
+					}
+				} else if (obj.getStatus() == STATUS.TOBESENT && obj.getLocation().equals(currentLocation)) {
+					messageIdList.add(obj.getMessageID());
+					obj.updateStatus(STATUS.WAITING);
 					delivered = true;
-				} else
-				    // Compare the distances and set the distance metric accordingly
-				    Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
-					i++;
+				} else if (!shouldIDeliver && obj.getStatus() == STATUS.TOBESENT && !obj.decrementProbe()) {
+					/* Probe Count is over, need to drop the message; probably
+					 * need to send Message to Original Sender that this message
+					 * hasn't been delivered */
+					messageQueue.remove(obj);
+				} else {
+				    if(distance != null)
+				        Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
+
+					  i++;
 			}
 
 			messageQueueMutex.notifyAll();
 		}
 
 		if (delivered) {
+			Message msg = DBUtils.getMessagesFromDB(ackMessages, userEmail); 
+			Mercury.addRequest(messageIdList, msg);
+			
 			if(!shouldIDeliver)
 				return messageIdList;
 
-			Message msg = DBUtils.getMessagesFromDB(messageIdList, userEmail); 
-			Mercury.addRequest(msg);
+			Message msg1 = DBUtils.getMessagesFromDB(messageIdList, userEmail); 
+			Mercury.addRequest(messageIdList, msg1);
 		}
 		return null;
 	}
@@ -159,13 +200,19 @@ public class Utils {
             out.writeObject(message);
             out.flush();
         } catch (ConnectException e) {
-            logUserOff(message.field1);
-            System.out.println("SEnd message failed");
-            return false;
-        } catch (IOException e) {
-            System.out.println("Send message failed");
+            System.out.println("ConnectException: Send message failed");
             e.printStackTrace();
             return false;
+        } catch (IOException e) {
+            System.out.println("IOException: Send message failed");
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            System.out.println("Exception: Send message failed");
+            e.printStackTrace();
+            return false;
+        } finally {
+            socket.close();
         }
         return true;
 	}
@@ -191,7 +238,7 @@ public class Utils {
 						if(list.length() == 0)
 							list = token;
 						else 
-							list += "|"+token;
+							list += " | "+token;
 						state = 0;
 						token = "";
 					} else
@@ -217,11 +264,11 @@ public class Utils {
         case VERY_NEAR:
             return 150L;
         case NEAR:
-            return 150000L;
+            return 150/*000*/L;
         case FAR:
-            return 15000000000L;
+            return 150/*00000000*/L;
         case VERY_FAR:
-            return 150000000000000000L;
+            return 150/*000000000000000*/L;
         }
         
         return 150L;

@@ -39,7 +39,7 @@ public class Message implements Serializable {
 	private static final long serialVersionUID = 42L;
 
 	public enum MsgType {
-		LOGIN_MSG, LOGOFF_MSG, SEND_MSG, NOTIFICATION, IP_UPDATE
+		LOGIN_MSG, LOGOFF_MSG, SEND_MSG, NOTIFICATION, IP_UPDATE, ACK
 	};
 
 	public MsgType msgType;
