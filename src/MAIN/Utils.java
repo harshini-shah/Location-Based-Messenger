@@ -1,16 +1,34 @@
 package MAIN;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import MAIN.Location.Distance;
+
 public class Utils {
     public static int SERVER_PORT_NUMBER = 6066;
-    public static int CLIENT_PORT_NUMBER = 6068;
+	public static int CLIENT_PORT_NUMBER = 6068;
+	private static String prefix = "\"name\":\"";
+	private static char termination = '\"';
+	private static ArrayList<String> roomLinks = new ArrayList<String>(Arrays.asList(
+			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=1",
+			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=2",
+			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=3",
+			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=4",
+			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=5",
+			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=6"));
 	private static Map<String, User> onlineUsers;
 	private static HashMap<String, Object> mutexBank = null;
 	private static HashMap<String, ArrayList<QueueObject>> messageQueueBank = null;
@@ -42,13 +60,9 @@ public class Utils {
 		onlineUsers.put(email, userObj);
 	}
 
-	public static int queueMessage(String userEmail, String message, Location loc, int messageID) {
-		queueMessage(userEmail, messageID, loc);
-		return messageID;
-	}
-	
-	public static void queueMessage(String userEmail, int id, Location loc) {
-		QueueObject obj = new QueueObject(id, loc);
+	public static void queueMessage(String userEmail, Location loc, int messageID) {
+
+		QueueObject obj = new QueueObject(messageID, loc);
 		ArrayList<QueueObject> queue = null;
 		Object messageQueueMutex = null;
 		if (messageQueueBank.get(userEmail) == null) {
@@ -75,7 +89,7 @@ public class Utils {
 	    return DBUtils.getCurrentLocationForUser(userEmail);
 	}
 
-	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver) {
+	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver, Location.Distance distance) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
@@ -89,6 +103,8 @@ public class Utils {
 					messageIdList.add(messageQueue.remove(i).getMessageID());
 					delivered = true;
 				} else
+				    // Compare the distances and set the distance metric accordingly
+				    Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
 					i++;
 			}
 
@@ -105,7 +121,13 @@ public class Utils {
 		return null;
 	}
 
-	private static Object getMutexForUser(String userEmail) {
+	private static void updateDistance(Distance finalDistance, Distance currDistance) {
+        if (finalDistance.compareTo(currDistance) < 0) {
+            finalDistance = currDistance;
+        }
+    }
+
+    private static Object getMutexForUser(String userEmail) {
 		return mutexBank.get(userEmail);
 	}
 
@@ -125,20 +147,83 @@ public class Utils {
 	 * - From the mercury thread which in turn is called by the probe thread. In this case, the
 	 * message is got from the database and already properly formatted.
 	 * 
+	 * The acknowledgement is a Message object with field 2 set to true or false depending on 
+	 * whether the message was received or not.
 	 */
-	public static void sendMessage(Message message) {
-	    // Establish the connection and send the message
+	public static boolean sendMessage(Message message) {
 	    try {
             Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
             ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
             ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
-            
+
             out.writeObject(message);
             out.flush();
-            out.close();
+        } catch (ConnectException e) {
+            logUserOff(message.field1);
+            System.out.println("SEnd message failed");
+            return false;
         } catch (IOException e) {
+            System.out.println("Send message failed");
             e.printStackTrace();
+            return false;
         }
-	    
+        return true;
 	}
+
+	public static String getRoomNos() throws Exception {
+		String list = "";
+		for (String link : roomLinks)
+			list = Utils.extractTokensFromUrl(link, prefix, termination, list);
+		return list;
+	}
+
+	private static String extractTokensFromUrl(String url, String prefix, char termination, String list)
+			throws IOException {
+		InputStream is = new URL(url).openStream();
+		try {
+			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+			String response = rd.readLine();
+			int state = 0;
+			String token = "";
+			for (int i = 0; i < response.length(); i++) {
+				if (state == prefix.length()) {
+					if (response.charAt(i) == termination) {
+						if(list.length() == 0)
+							list = token;
+						else 
+							list += "|"+token;
+						state = 0;
+						token = "";
+					} else
+						token += response.charAt(i);
+				} else if (response.charAt(i) == prefix.charAt(state))
+					state++;
+				else {
+					state = 0;
+					token = "";
+				}
+			}
+		} finally {
+			is.close();
+		}
+		return list;
+	}
+
+	/*
+	 * Provides a mapping of the distance metric to the sleep time.
+	 */
+    public static long getSleepTime(Distance distance) {
+        switch(distance) {
+        case VERY_NEAR:
+            return 150L;
+        case NEAR:
+            return 150000L;
+        case FAR:
+            return 15000000000L;
+        case VERY_FAR:
+            return 150000000000000000L;
+        }
+        
+        return 150L;
+    }
 }
