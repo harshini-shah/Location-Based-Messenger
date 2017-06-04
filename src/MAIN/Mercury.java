@@ -20,6 +20,10 @@ public class Mercury {
 
 	public static void addRequest(ArrayList<Integer> msgIdList, Message request) {
 
+	    if (request == null || msgIdList == null || msgIdList.isEmpty()) {
+	        return;
+	    }
+	    
 		synchronized (mutex) {
 			mRequestQueue.add(new MercuryQueueObject(msgIdList, request));
 			mutex.notifyAll();
@@ -69,7 +73,7 @@ public class Mercury {
 								msg.field2 = users[x].trim();
 								msg.field3 = "Message " + mMercuryObj.msg.field3 + " delivered to "
 										+ mMercuryObj.msg.field1;
-								Utils.queueMessage(msg.field2, null, DBUtils.addTransaction(msg));
+								Utils.queueMessage(msg.field2, null, DBUtils.addTransaction(msg));								
 								ProbeManager.startProbeFor(msg.field2);
 							}
 						} else if (mMercuryObj.msg.msgType != Message.MsgType.ACK)

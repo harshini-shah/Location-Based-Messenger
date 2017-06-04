@@ -78,7 +78,9 @@ public class Utils {
 			messageQueueMutex = getMutexForUser(userEmail);
 		}
 
+		
 		synchronized (messageQueueMutex) {
+		    
 			queue.add(obj);
 			messageQueueMutex.notifyAll();
 		}
@@ -112,6 +114,7 @@ public class Utils {
 				if (obj.getStatus() == STATUS.ACK) {
 					messageQueue.remove(obj);
 					ackMessages.add(obj.getMessageID());
+					delivered = true;
 				} else if (deliveredList != null && obj.getStatus() == STATUS.WAITING) {
 					synchronized (deliveredList) {
 						if (deliveredList.contains(obj.getMessageID())) {
@@ -131,9 +134,10 @@ public class Utils {
 							i++;
 					}
 				} else if (obj.getStatus() == STATUS.TOBESENT && obj.getLocation().equals(currentLocation)) {
-					messageIdList.add(obj.getMessageID());
+				    messageIdList.add(obj.getMessageID());
 					obj.updateStatus(STATUS.WAITING);
 					delivered = true;
+					i++;
 				} else if (!shouldIDeliver && obj.getStatus() == STATUS.TOBESENT && !obj.decrementProbe()) {
 					/* Probe Count is over, need to drop the message; probably
 					 * need to send Message to Original Sender that this message
@@ -152,7 +156,7 @@ public class Utils {
 
 		if (delivered) {
 			Message msg = DBUtils.getMessagesFromDB(ackMessages, userEmail); 
-			Mercury.addRequest(messageIdList, msg);
+			Mercury.addRequest(ackMessages, msg);
 			
 			if(!shouldIDeliver)
 				return messageIdList;
@@ -213,14 +217,15 @@ public class Utils {
 			System.out.println("Exception: Send message failed");
 			e.printStackTrace();
 			return false;
-		} finally {
-			if (socket != null)
-				try {
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-		}
+		} 
+//		finally {
+//			if (socket != null)
+//				try {
+////					socket.close();
+//				} catch (IOException e) {
+//					e.printStackTrace();
+//				}
+//		}
 		return true;
 	}
 
