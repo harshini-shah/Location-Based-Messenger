@@ -65,11 +65,6 @@ public class Client {
 			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && ((fromServer.field1.compareTo(user_id) == 0))
 					&& ((fromServer.field2.compareTo("TRUE")) == 0) && (fromServer.field3 != null)
 					&& (fromServer.field4 != null)) {
-				if(!fromServer.field3.contains("\\|")){
-					System.out.println("MESSAGE = " + fromServer.field3);
-					System.out.println("FROM = " + fromServer.field4);
-				}
-				else{
 					String[] msg_split = fromServer.field3.split("\\|");
 					String[] sender_split = fromServer.field4.split("\\|");
 					for (int i =0; i < msg_split.length; i++){
@@ -77,7 +72,6 @@ public class Client {
 						System.out.println("FROM = "+sender_split[i]);
 					}
 				}
-			}
 
 			/*
 			 * Receive a msg from client to confirm registered user and then
