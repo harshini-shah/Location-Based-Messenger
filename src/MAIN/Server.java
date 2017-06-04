@@ -121,7 +121,7 @@ public class Server {
 					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
-					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false, null);
+					ArrayList<Integer> messageIdList = Utils.getAllDeliverableMessages(userEmail);
 					if (messageIdList == null || messageIdList.isEmpty())
 						sendEmptyAffirmation = true;
 					else {
@@ -157,23 +157,12 @@ public class Server {
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot send a message");
 				}
-				
-				String recipientEmail = msg.field2;
-				
-				// Check if the user is online and the location is a match
-				if (Utils.isUserOnline(recipientEmail) && Utils.getCurrentLocationForUser(recipientEmail).equals(new Location(msg.field4))) {
-				    msg.msgType = Message.MsgType.NOTIFICATION;
-			        msg.field4 = userEmail;
-			        msg.field1 = recipientEmail;
-			        msg.field2 = null;
-				    Utils.sendMessage(msg);
-				    client.close();
-				} else {
-				    int messageID = DBUtils.addTransaction(msg);
-					Utils.queueMessage(msg.field2, new Location (msg.field4), messageID);
-					ProbeManager.startProbeFor(msg.field2);
-					client.close();
-				}
+
+				int messageID = DBUtils.addTransaction(msg);
+				Utils.queueMessage(msg.field2, new Location(msg.field4), messageID);
+				ProbeManager.startProbeFor(msg.field2);
+				client.close();
+
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
 				userEmail = msg.field1;
