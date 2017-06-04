@@ -109,7 +109,7 @@ public class Utils {
 			for (int i = 0; i < messageQueue.size();) {
 				QueueObject obj = messageQueue.get(i);
 
-				if(obj.getStatus() == STATUS.ACK) {
+				if (obj.getStatus() == STATUS.ACK) {
 					messageQueue.remove(obj);
 					ackMessages.add(obj.getMessageID());
 				} else if (deliveredList != null && obj.getStatus() == STATUS.WAITING) {
@@ -140,13 +140,14 @@ public class Utils {
 					 * hasn't been delivered */
 					messageQueue.remove(obj);
 				} else {
-				    if(distance != null)
-				        Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
+					if (!shouldIDeliver && distance != null)
+						Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
 
-					  i++;
+					i++;
+				}
+
+				messageQueueMutex.notifyAll();
 			}
-
-			messageQueueMutex.notifyAll();
 		}
 
 		if (delivered) {
@@ -192,29 +193,35 @@ public class Utils {
 	 * whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
-	    try {
-            Socket socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
-            ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
-            ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
+		Socket socket = null;
+		try {
+			socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
+			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
-            out.writeObject(message);
-            out.flush();
-        } catch (ConnectException e) {
-            System.out.println("ConnectException: Send message failed");
-            e.printStackTrace();
-            return false;
-        } catch (IOException e) {
-            System.out.println("IOException: Send message failed");
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            System.out.println("Exception: Send message failed");
-            e.printStackTrace();
-            return false;
-        } finally {
-            socket.close();
-        }
-        return true;
+			out.writeObject(message);
+			out.flush();
+		} catch (ConnectException e) {
+			System.out.println("ConnectException: Send message failed");
+			e.printStackTrace();
+			return false;
+		} catch (IOException e) {
+			System.out.println("IOException: Send message failed");
+			e.printStackTrace();
+			return false;
+		} catch (Exception e) {
+			System.out.println("Exception: Send message failed");
+			e.printStackTrace();
+			return false;
+		} finally {
+			if (socket != null)
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+		return true;
 	}
 
 	public static String getRoomNos() throws Exception {
@@ -264,11 +271,11 @@ public class Utils {
         case VERY_NEAR:
             return 150L;
         case NEAR:
-            return 150/*000*/L;
+            return 150L;
         case FAR:
-            return 150/*00000000*/L;
+            return 150L;
         case VERY_FAR:
-            return 150/*000000000000000*/L;
+            return 150L;
         }
         
         return 150L;
