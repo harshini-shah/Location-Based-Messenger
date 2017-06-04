@@ -121,7 +121,7 @@ public class Server {
 					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
 					 * f4 - "madhur@uci.edu | sharad@uci.edu"
 					 */
-					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false);
+					ArrayList<Integer> messageIdList = Utils.deliverAllPossibleMessages(userEmail, false, null);
 					if (messageIdList == null || messageIdList.isEmpty())
 						sendEmptyAffirmation = true;
 					else {

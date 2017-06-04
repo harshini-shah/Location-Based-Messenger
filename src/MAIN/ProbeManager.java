@@ -33,6 +33,7 @@ public class ProbeManager {
 
 	private static class ProbeThread extends Thread {
 		private String email = null;
+		Location.Distance distance = Location.Distance.VERY_FAR;
 
 		private ProbeThread(String eMail) {
 			email = eMail;
@@ -43,8 +44,10 @@ public class ProbeManager {
 		    System.out.println("Probe running for " + email);
 			while (Utils.messageQueueForUserExists(email)) {
 				try {
-					Utils.deliverAllPossibleMessages(email, true);
-					Thread.sleep(150);
+					Utils.deliverAllPossibleMessages(email, true, distance);
+					long l = Utils.getSleepTime(distance);
+					System.out.println("*************** Sleep time is " + l + " *****************");
+					Thread.sleep(l);
 				} catch (InterruptedException E) {
 					if (!Utils.isUserOnline(email))
 						break;
