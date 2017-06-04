@@ -26,7 +26,7 @@ public class IPObserver extends Thread {
 			while (isAlive) {
 				if (!InetAddress.getLocalHost().equals(mInetAddress))
 					mClient.ipUpdated();
-				Thread.sleep(2000);
+				Thread.sleep(200);
 			}
 		} catch (InterruptedException e) {
 			isAlive = false;
