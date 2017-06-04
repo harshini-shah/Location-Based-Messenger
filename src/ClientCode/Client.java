@@ -52,26 +52,26 @@ public class Client {
 			Message fromServer = (Message) inputStream.readObject();
 			System.out.println(fromServer);
 
-			String[] roomNos = msg.field2.split("\\|");
+			String[] roomNos = fromServer.field2.split("\\|");
 			String auth = roomNos[0];
 
-			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && fromServer.field1.equals(user_id)
+			/* Room no's are stored in roomNos[1:end] */
+			if (fromServer.msgType == Message.MsgType.LOGIN_MSG && fromServer.field1.equals(user_id)
 					&& auth.equals("FALSE")) {
 				System.out.println("MESSAGE = " + fromServer.field3);
 				System.out.println("FROM = " + fromServer.field4);
 				System.exit(0);
 			}
 
-			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && ((fromServer.field1.compareTo(user_id) == 0))
-					&& ((fromServer.field2.compareTo("TRUE")) == 0) && (fromServer.field3 != null)
-					&& (fromServer.field4 != null)) {
-					String[] msg_split = fromServer.field3.split("\\|");
-					String[] sender_split = fromServer.field4.split("\\|");
-					for (int i =0; i < msg_split.length; i++){
-						System.out.println("MESSAGE = " + msg_split[i]);
-						System.out.println("FROM = "+sender_split[i]);
-					}
+			if (fromServer.msgType == Message.MsgType.LOGIN_MSG && fromServer.field1.equals(user_id)
+					&& auth.equals("TRUE") && (fromServer.field3 != null) && (fromServer.field4 != null)) {
+				String[] msg_split = fromServer.field3.split("\\|");
+				String[] sender_split = fromServer.field4.split("\\|");
+				for (int i = 0; i < msg_split.length; i++) {
+					System.out.println("MESSAGE = " + msg_split[i]);
+					System.out.println("FROM = " + sender_split[i]);
 				}
+			}
 
 			/*
 			 * Receive a msg from client to confirm registered user and then
@@ -79,7 +79,7 @@ public class Client {
 			 */
 			clientReceive = new ClientReceive(user_id);
 			clientReceive.start();
-			
+
 			observer = new IPObserver(this, InetAddress.getLocalHost());
 			observer.start();
 
@@ -88,7 +88,7 @@ public class Client {
 			scanner.nextLine();
 
 			while (choice != 2) {
-				//System.out.println("Enter the recipient user_id");
+				// System.out.println("Enter the recipient user_id");
 				String recipient_id = null;
 
 				System.out.println("Enter your message");
@@ -100,15 +100,14 @@ public class Client {
 				System.out.println("Enter the number of recipients ");
 				int count = scanner.nextInt();
 				scanner.nextLine();
-				for(int i = 0; i < count; i++){
-					System.out.println("Enter the recipient user_id");
+				for (int i = 0; i < count; i++) {
+					System.out.println("Enter the recipient user_id #" + (i + 1));
 					recipient_id = scanner.nextLine();
-					if(r_id == null) r_id = recipient_id;
-					else{
+					if (r_id == null)
+						r_id = recipient_id;
+					else
 						r_id += "|" + recipient_id;
-					}
 				}
-				//System.out.println("The R_list is " + r_id);
 
 				System.out.println("You are sending the message to:  " + r_id);
 				System.out.println("The message is :  " + text_msg);
