@@ -353,6 +353,11 @@ public class DBUtils {
      * Assumes that all the recipients are the same - No error checking done
      */
     public static Message getMessagesFromDB(ArrayList<Integer> messageIdList, String userEmail) {
+
+        if (messageIdList == null || messageIdList.isEmpty() || userEmail == null) {
+            return null;
+        }
+
         Message message = new Message();
         
         String field3 = "";
