@@ -70,16 +70,16 @@ public class ProbeManager {
 		nullCheck();
 
 		if (!mThreadMapping.containsKey(email)) {
-			ArrayList<Integer> delivered = null;
+			ArrayList<Integer> list = null;
 			if (!mReserveDelivered.containsKey(email)) {
-				delivered = new ArrayList<Integer>();
-				delivered.add(id);
-				mReserveDelivered.put(email, delivered);
+				list = new ArrayList<Integer>();
+				list.add(id);
+				mReserveDelivered.put(email, list);
 			} else {
-				delivered = mReserveDelivered.get(email);
-				synchronized (delivered) {
-					delivered.add(id);
-					delivered.notifyAll();
+				list = mReserveDelivered.get(email);
+				synchronized (list) {
+					list.add(id);
+					list.notifyAll();
 				}
 			}
 			return;

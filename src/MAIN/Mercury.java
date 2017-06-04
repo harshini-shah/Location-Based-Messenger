@@ -65,12 +65,12 @@ public class Mercury {
 							for (int x = 0; x < users.length; x++) {
 								Message msg = new Message();
 								msg.msgType = Message.MsgType.ACK;
-								msg.field1 = users[x].trim();
+								msg.field1 = "SERVER";
+								msg.field2 = users[x].trim();
 								msg.field3 = "Message " + mMercuryObj.msg.field3 + " delivered to "
-										+ mMercuryObj.msg.field4;
-								msg.field4 = "SERVER";
-								Utils.queueMessage(msg.field1, null, DBUtils.addTransaction(msg));
-
+										+ mMercuryObj.msg.field1;
+								Utils.queueMessage(msg.field2, null, DBUtils.addTransaction(msg));
+								ProbeManager.startProbeFor(msg.field2);
 							}
 						} else if (mMercuryObj.msg.msgType != Message.MsgType.ACK)
 							ProbeManager.addUndeliveredNotice(mMercuryObj.msg.field1, i);

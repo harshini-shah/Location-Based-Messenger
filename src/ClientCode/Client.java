@@ -30,7 +30,7 @@ public class Client {
 
 	Client() {
 		try {
-			servername = "169.234.0.27";
+			servername = "192.168.0.7";
 			port = Utils.SERVER_PORT_NUMBER;
 			System.out.println("Enter the user id");
 			scanner = new Scanner(System.in);
