@@ -61,96 +61,54 @@ public class Server {
 				 * Handle a Login Required
 				 * TODO : make sure that the user is "disconnected" after you close the connection
 				 */
-
-				userEmail = msg.field1;
-				// Check that the user email is there in the DB
-				if (!registeredUser(userEmail)) {
-					/**
-					 * CREATE MSG OBJ
-					 * msgType = same as before
-					 * f1 - harshini@uci.edu
-					 * f2 - "FALSE"
-					 * f4 - "ERROR: Email ID Not Registered on System"
-					 */
-				    Message message = new Message();
-				    message.msgType = msg.msgType;
-				    message.field1 = userEmail;
-				    message.field2 = "FALSE";
-					String invalidUserMsg = "ERROR: Email ID Not Registered on System";
-					message.field4 = invalidUserMsg;
-					out.writeObject(message);
-					out.flush();
-					client.close();
-					
-					// Disconnect user
-					continue;
-				}
-
-				String password = msg.field2;
-				// Check that the passwords match
-				if (!checkPassword(userEmail, password)) {
-					/**
-					 * CREATE MSG OBJ
-					 * msgType = same as before
-					 * f1 - harshini@uci.edu
-					 * f2 - "FALSE"
-					 * f4 - "ERROR: Wrong Password"
-					 */
-					Message message = new Message();
-                    message.msgType = msg.msgType;
-                    message.field1 = userEmail;
-                    message.field2 = "FALSE";
-                    String wrongPasswordMsg = "ERROR: Wrong Password";
-                    message.field4 = wrongPasswordMsg;
-                    out.writeObject(message);
+			    checkUser(msg);
+			    if (msg.field2.equals("FALSE")) {
+			        out.writeObject(msg);
                     out.flush();
-					client.close();
-					
-					continue;
-				}
+                    client.close();
+			    } else {
+			        Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
+			        boolean sendEmptyAffirmation = false;
+	                if (Utils.messageQueueForUserExists(userEmail)) {
+	                    /**
+	                     * CREATE MSG OBJ
+	                     * msgType = same as before
+	                     * f1 - harshini@uci.edu
+	                     * f2 - "TRUE | room nos "
+	                     * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
+	                     * f4 - "madhur@uci.edu | sharad@uci.edu"
+	                     */
+	                    ArrayList<Integer> messageIdList = Utils.getAllDeliverableMessages(userEmail);
+	                    if (messageIdList == null || messageIdList.isEmpty())
+	                        sendEmptyAffirmation = true;
+	                    else {
+	                        Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
+	                        
+	                        reply.msgType = Message.MsgType.LOGIN_MSG;
+	                        reply.field2 = roomNos;
+	                        out.writeObject(reply);
+	                        out.flush();
+	                        client.close();
+	                    }
+	                } else
+	                    sendEmptyAffirmation = true;
 
-				Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
-
-				boolean sendEmptyAffirmation = false;
-				if (Utils.messageQueueForUserExists(userEmail)) {
-					/**
-					 * CREATE MSG OBJ
-					 * msgType = same as before
-					 * f1 - harshini@uci.edu
-					 * f2 - "TRUE | room nos "
-					 * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
-					 * f4 - "madhur@uci.edu | sharad@uci.edu"
-					 */
-					ArrayList<Integer> messageIdList = Utils.getAllDeliverableMessages(userEmail);
-					if (messageIdList == null || messageIdList.isEmpty())
-						sendEmptyAffirmation = true;
-					else {
-						Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
-						
-						reply.msgType = Message.MsgType.LOGIN_MSG;
-						reply.field2 = roomNos;
-						out.writeObject(reply);
-						out.flush();
-						client.close();
-					}
-				} else
-					sendEmptyAffirmation = true;
-
-				if (sendEmptyAffirmation) {
-					/**
-					 * CREATE MSG OBJ msgType = same as before
-					 * f1 - harshini@uci.edu
-					 * f2 - "TRUE | room nos" 
-					 * f3 - null 
-					 * f4 - null
-					 */
-					msg.field2 = roomNos;
-					out.writeObject(msg);
-					out.flush();
-					client.close();
-				}
-				
-				ProbeManager.startProbeFor(userEmail);
+	                if (sendEmptyAffirmation) {
+	                    /**
+	                     * CREATE MSG OBJ msgType = same as before
+	                     * f1 - harshini@uci.edu
+	                     * f2 - "TRUE | room nos" 
+	                     * f3 - null 
+	                     * f4 - null
+	                     */
+	                    msg.field2 = roomNos;
+	                    out.writeObject(msg);
+	                    out.flush();
+	                    client.close();
+	                }
+	                
+	                ProbeManager.startProbeFor(userEmail);
+			    }
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
 				/* handle sending a new message */
 				userEmail = msg.field1;
@@ -186,14 +144,24 @@ public class Server {
 		}
 	}
 
-	private boolean registeredUser(String userEmail) {
-	    return DBUtils.checkUser(userEmail);
+	private Message checkUser(Message message) {
+	    String userEmail = message.field1;
+	    String password = message.field2;
+	    
+	    String correctPassword = DBUtils.checkUser(userEmail);	    
+	    if (correctPassword == null) {
+	        message.field2 = "FALSE";
+	        message.field4 = "ERROR: Email ID Not Registered on System";
+	    } else if (!correctPassword.equals(password)) {
+	        message.field2 = "FALSE";
+	        message.field4 = "ERROR: Wrong Password";
+	    } else {
+	        message.field2 = "TRUE";
+	    }
+	    
+	    return message;
 	}
 
-	private boolean checkPassword(String userEmail, String password) {
-	    return DBUtils.checkPassword(userEmail, password);
-	}
-	
 	public static void main(String[] args) throws Exception {
 	    Server server = new Server(Utils.SERVER_PORT_NUMBER);
 	}
