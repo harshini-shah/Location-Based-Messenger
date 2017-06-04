@@ -55,8 +55,19 @@ public class Client {
 			if ((fromServer.msgType == Message.MsgType.LOGIN_MSG) && ((fromServer.field1.compareTo(user_id) == 0))
 					&& ((fromServer.field2.compareTo("TRUE")) == 0) && (fromServer.field3 != null)
 					&& (fromServer.field4 != null)) {
-				System.out.println("MESSAGE = " + fromServer.field3);
-				System.out.println("FROM = " + fromServer.field4);
+				if(!fromServer.field3.contains("|")){
+					System.out.println("MESSAGE = " + fromServer.field3);
+					System.out.println("FROM = " + fromServer.field4);
+				}
+				else{
+					String[] msg_split = fromServer.field3.split("\\|");
+					String[] sender_split = fromServer.field4.split("\\|");
+					for (int i =0; i < msg_split.length; i++){
+						System.out.println("MESSAGE = " + msg_split[i]);
+						System.out.println("FROM = "+sender_split[i]);
+					}
+				}
+
 			}
 
 			/*
@@ -71,21 +82,35 @@ public class Client {
 			scanner.nextLine();
 
 			while (choice != 2) {
-				System.out.println("Enter the recipient user_id");
-				String recipient_id = scanner.nextLine();
+				//System.out.println("Enter the recipient user_id");
+				String recipient_id = null;
 
 				System.out.println("Enter your message");
 				String text_msg = scanner.nextLine();
 				System.out.println("Enter the location");
 				String location = scanner.nextLine();
 
-				System.out.println("You are sending the message to:  " + recipient_id);
+				String r_id = null;
+				System.out.println("Enter the number of recipients ");
+				int count = scanner.nextInt();
+				scanner.nextLine();
+				for(int i = 0; i < count; i++){
+					System.out.println("Enter the recipient user_id");
+					recipient_id = scanner.nextLine();
+					if(r_id == null) r_id = recipient_id;
+					else{
+						r_id += "|" + recipient_id;
+					}
+				}
+				//System.out.println("The R_list is " + r_id);
+
+				System.out.println("You are sending the message to:  " + r_id);
 				System.out.println("The message is :  " + text_msg);
 				System.out.println("The Location is :  " + location);
 
 				msg.msgType = MsgType.SEND_MSG;
 				msg.field1 = user_id;
-				msg.field2 = recipient_id;
+				msg.field2 = r_id;
 				msg.field3 = text_msg;
 				msg.field4 = location;
 
