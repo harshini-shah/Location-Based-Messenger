@@ -45,7 +45,9 @@ public class ProbeManager {
 			while (Utils.messageQueueForUserExists(email)) {
 				try {
 					Utils.deliverAllPossibleMessages(email, true, distance);
-					Thread.sleep(Utils.getSleepTime(distance));
+					long l = Utils.getSleepTime(distance);
+					System.out.println("*************** Sleep time is " + l + " *****************");
+					Thread.sleep(l);
 				} catch (InterruptedException E) {
 					if (!Utils.isUserOnline(email))
 						break;

@@ -105,7 +105,6 @@ public class Utils {
 				} else
 				    // Compare the distances and set the distance metric accordingly
 				    Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
-				    
 					i++;
 			}
 
@@ -123,7 +122,7 @@ public class Utils {
 	}
 
 	private static void updateDistance(Distance finalDistance, Distance currDistance) {
-        if (finalDistance.compareTo(currDistance) > 0) {
+        if (finalDistance.compareTo(currDistance) < 0) {
             finalDistance = currDistance;
         }
     }
