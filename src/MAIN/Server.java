@@ -58,6 +58,7 @@ public class Server {
 				 * Handle a Login Required
 				 * TODO : make sure that the user is "disconnected" after you close the connection
 				 */
+			    userEmail = msg.field1;
 			    checkUser(msg);
 			    if (msg.field2.equals("FALSE")) {
 			        out.writeObject(msg);
@@ -65,31 +66,7 @@ public class Server {
                     client.close();
 				} else {
 					Utils.logUserOn(userEmail, new User(userEmail, client.getInetAddress()));
-					boolean sendEmptyAffirmation = false;
-	                if (Utils.messageQueueForUserExists(userEmail)) {
-	                    /**
-	                     * CREATE MSG OBJ
-	                     * msgType = same as before
-	                     * f1 - harshini@uci.edu
-	                     * f2 - "TRUE | room nos "
-	                     * f3 - "THIS IS MADHUR, HOW ARE YOU | THIS iS SHARAD, HOW ARE YOU"
-	                     * f4 - "madhur@uci.edu | sharad@uci.edu"
-	                     */
-	                    ArrayList<Integer> messageIdList = Utils.getAllDeliverableMessages(userEmail);
-	                    if (messageIdList == null || messageIdList.isEmpty())
-	                        sendEmptyAffirmation = true;
-	                    else {
-	                        Message reply = DBUtils.getMessagesFromDB(messageIdList,userEmail);
-	                        
-	                        reply.msgType = Message.MsgType.LOGIN_MSG;
-	                        reply.field2 = roomNos;
-	                        out.writeObject(reply);
-	                        out.flush();
-	                        client.close();
-	                    }
-	                } else
-	                    sendEmptyAffirmation = true;
-
+					boolean sendEmptyAffirmation = true;
 	                if (sendEmptyAffirmation) {
 	                    /**
 	                     * CREATE MSG OBJ msgType = same as before
@@ -103,7 +80,6 @@ public class Server {
 	                    out.flush();
 	                    client.close();
 	                }
-	                
 	                ProbeManager.startProbeFor(userEmail);
 			    }
 			} else if (msg.msgType == Message.MsgType.SEND_MSG) {
@@ -117,17 +93,11 @@ public class Server {
 				int messageID = DBUtils.addTransaction(msg);
 				
 				// Field 2 has the receiver email IDs - Check if there are multiple ones
-				if (msg.field2.contains("|")) {
-				    String[] recipients = msg.field2.split("|");
-				    for (int i = 0; i < recipients.length; i++) {
-				        Utils.queueMessage(recipients[i].trim(), new Location(msg.field4), messageID);
-				        ProbeManager.startProbeFor(recipients[i].trim());
-				    }
-				} else {
-	                Utils.queueMessage(msg.field2, new Location(msg.field4), messageID);
-	                ProbeManager.startProbeFor(msg.field2);
-				}
-				
+			    String[] recipients = msg.field2.split("\\|");
+			    for (int i = 0; i < recipients.length; i++) {
+			        Utils.queueMessage(recipients[i].trim(), new Location(msg.field4), messageID);
+			        ProbeManager.startProbeFor(recipients[i].trim());
+			    }
 				client.close();
 
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
