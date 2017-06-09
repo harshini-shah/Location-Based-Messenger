@@ -7,28 +7,38 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import MAIN.QueueObject.STATUS;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import MAIN.Location.Distance;
+import MAIN.QueueObject.STATUS;
 
 public class Utils {
-  public static int SERVER_PORT_NUMBER = 6066;
+	public static boolean TEST_MODE = false;
+	public static int SERVER_PORT_NUMBER = 6066;
 	public static int CLIENT_PORT_NUMBER = 6068;
 	private static String prefix = "\"name\":\"";
 	private static char termination = '\"';
-	private static ArrayList<String> roomLinks = new ArrayList<String>(Arrays.asList(
-			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=1",
-			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=2",
-			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=3",
-			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=4",
-			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=5",
-			"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=6"));
+	public static SimpleDateFormat mDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	private static ArrayList<String> roomLinks = new ArrayList<String>(
+			Arrays.asList("http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=1",
+					"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=2",
+					"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=3",
+					"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=4",
+					"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=5",
+					"http://sensoria.ics.uci.edu:8001/infrastructure/get?floor=6"));
 	private static Map<String, User> onlineUsers;
 	private static HashMap<String, Object> mutexBank = null;
 	private static HashMap<String, ArrayList<QueueObject>> messageQueueBank = null;
@@ -55,6 +65,10 @@ public class Utils {
 		onlineUsers.remove(email);
 	}
 
+	public static void updateIPForUser(String email, InetAddress ip) {
+		onlineUsers.get(email).updateIP(ip);
+	}
+
 	public static void logUserOn(String email, User userObj) {
 		nullCheck();
 		onlineUsers.put(email, userObj);
@@ -63,7 +77,7 @@ public class Utils {
 	public static void queueMessage(String userEmail, Location loc, int messageID) {
 
 		QueueObject obj = new QueueObject(messageID, loc);
-		if(loc == null)
+		if (loc == null)
 			obj.updateStatus(QueueObject.STATUS.ACK);
 
 		ArrayList<QueueObject> queue = null;
@@ -79,6 +93,7 @@ public class Utils {
 		}
 
 		synchronized (messageQueueMutex) {
+
 			queue.add(obj);
 			messageQueueMutex.notifyAll();
 		}
@@ -87,21 +102,24 @@ public class Utils {
 	public static boolean messageQueueForUserExists(String userEmail) {
 		return messageQueueBank.get(userEmail) != null && !messageQueueBank.get(userEmail).isEmpty();
 	}
-	
-	public static Location getCurrentLocationForUser(String userEmail) {
-	    return DBUtils.getCurrentLocationForUser(userEmail);
-	}
+
+	public static HashSet<Location> getCurrentLocationForUser(String userEmail) {
+		if(TEST_MODE)
+			return DBUtils.getCurrentLocationForUser(userEmail);
+		else
+			return onlineUsers.get(userEmail).getCurrLocationList();
+	}	
 
 	public static ArrayList<Integer> getAllDeliverableMessages(String userEmail) {
 		return deliverAllPossibleMessages(userEmail, false, null, null, null);
 	}
 
 	public static ArrayList<Integer> deliverAllPossibleMessages(String userEmail, boolean shouldIDeliver,
-			ArrayList<Integer> deliveredList, ArrayList<Integer> unDeliveredList, Location.Distance distance) {
+			HashSet<Integer> deliveredList, HashSet<Integer> unDeliveredList, Location.Distance distance) {
 		boolean delivered = false;
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
-		Location currentLocation = getCurrentLocationForUser(userEmail);
+		HashSet<Location> currentLocationList = getCurrentLocationForUser(userEmail);
 		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
 		ArrayList<Integer> ackMessages = new ArrayList<Integer>();
 
@@ -112,6 +130,7 @@ public class Utils {
 				if (obj.getStatus() == STATUS.ACK) {
 					messageQueue.remove(obj);
 					ackMessages.add(obj.getMessageID());
+					delivered = true;
 				} else if (deliveredList != null && obj.getStatus() == STATUS.WAITING) {
 					synchronized (deliveredList) {
 						if (deliveredList.contains(obj.getMessageID())) {
@@ -130,18 +149,21 @@ public class Utils {
 						} else
 							i++;
 					}
-				} else if (obj.getStatus() == STATUS.TOBESENT && obj.getLocation().equals(currentLocation)) {
+				} else if (obj.getStatus() == STATUS.TOBESENT && obj.getLocation().isEqualImpl(currentLocationList)) {
 					messageIdList.add(obj.getMessageID());
 					obj.updateStatus(STATUS.WAITING);
 					delivered = true;
+					i++;
 				} else if (!shouldIDeliver && obj.getStatus() == STATUS.TOBESENT && !obj.decrementProbe()) {
-					/* Probe Count is over, need to drop the message; probably
+					/*
+					 * Probe Count is over, need to drop the message; probably
 					 * need to send Message to Original Sender that this message
-					 * hasn't been delivered */
+					 * hasn't been delivered
+					 */
 					messageQueue.remove(obj);
 				} else {
 					if (!shouldIDeliver && distance != null)
-						Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocation));
+						Utils.updateDistance(distance, obj.getLocation().getDistance(currentLocationList));
 
 					i++;
 				}
@@ -151,25 +173,25 @@ public class Utils {
 		}
 
 		if (delivered) {
-			Message msg = DBUtils.getMessagesFromDB(ackMessages, userEmail); 
-			Mercury.addRequest(messageIdList, msg);
-			
-			if(!shouldIDeliver)
+			Message msg = DBUtils.getMessagesFromDB(ackMessages, userEmail);
+			Mercury.addRequest(ackMessages, msg);
+
+			if (!shouldIDeliver)
 				return messageIdList;
 
-			Message msg1 = DBUtils.getMessagesFromDB(messageIdList, userEmail); 
+			Message msg1 = DBUtils.getMessagesFromDB(messageIdList, userEmail);
 			Mercury.addRequest(messageIdList, msg1);
 		}
 		return null;
 	}
 
 	private static void updateDistance(Distance finalDistance, Distance currDistance) {
-        if (finalDistance.compareTo(currDistance) < 0) {
-            finalDistance = currDistance;
-        }
-    }
+		if (finalDistance.compareTo(currDistance) < 0) {
+			finalDistance = currDistance;
+		}
+	}
 
-    private static Object getMutexForUser(String userEmail) {
+	private static Object getMutexForUser(String userEmail) {
 		return mutexBank.get(userEmail);
 	}
 
@@ -181,21 +203,21 @@ public class Utils {
 		 */
 		return messageQueueBank.get(userEmail);
 	}
-	
+
 	/*
-	 * Can be called from two places:
-	 * - From the server, if A sends a message to B, and B is online and the location matches. In
-	 * this case, the message has to be formatted accordingly and sent
-	 * - From the mercury thread which in turn is called by the probe thread. In this case, the
-	 * message is got from the database and already properly formatted.
+	 * Can be called from two places: - From the server, if A sends a message to
+	 * B, and B is online and the location matches. In this case, the message
+	 * has to be formatted accordingly and sent - From the mercury thread which
+	 * in turn is called by the probe thread. In this case, the message is got
+	 * from the database and already properly formatted.
 	 * 
-	 * The acknowledgement is a Message object with field 2 set to true or false depending on 
-	 * whether the message was received or not.
+	 * The acknowledgement is a Message object with field 2 set to true or false
+	 * depending on whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
 		Socket socket = null;
 		try {
-			socket = new Socket(onlineUsers.get(message.field1).ipAddress, CLIENT_PORT_NUMBER);
+			socket = new Socket(onlineUsers.get(message.field1).getIPAddress(), CLIENT_PORT_NUMBER);
 			ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
 			ObjectInputStream in = new ObjectInputStream(socket.getInputStream());
 
@@ -213,13 +235,6 @@ public class Utils {
 			System.out.println("Exception: Send message failed");
 			e.printStackTrace();
 			return false;
-		} finally {
-			if (socket != null)
-				try {
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 		}
 		return true;
 	}
@@ -242,10 +257,10 @@ public class Utils {
 			for (int i = 0; i < response.length(); i++) {
 				if (state == prefix.length()) {
 					if (response.charAt(i) == termination) {
-						if(list.length() == 0)
+						if (list.length() == 0)
 							list = token;
-						else 
-							list += " | "+token;
+						else
+							list += " | " + token;
 						state = 0;
 						token = "";
 					} else
@@ -266,18 +281,39 @@ public class Utils {
 	/*
 	 * Provides a mapping of the distance metric to the sleep time.
 	 */
-    public static long getSleepTime(Distance distance) {
-        switch(distance) {
-        case VERY_NEAR:
-            return 150L;
-        case NEAR:
-            return 150L;
-        case FAR:
-            return 150L;
-        case VERY_FAR:
-            return 150L;
-        }
-        
-        return 150L;
-    }
+	public static long getSleepTime(Distance distance) {
+		switch (distance) {
+		case VERY_NEAR:
+			return 150L;
+		case NEAR:
+			return 150L;
+		case FAR:
+			return 150L;
+		case VERY_FAR:
+			return 150L;
+		}
+
+		return 150L;
+	}
+	
+	public static HashSet<Location> getDBHLocationListForUrl(String url) {
+		HashSet<Location> mList = new HashSet<Location>();
+		InputStream is;
+		try {
+			is = new URL(url).openStream();
+			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+			String response = rd.readLine();
+			JSONArray arr = new JSONArray(response);
+			for (int i = 0; i < arr.length(); i++) {
+				JSONObject obj = (JSONObject) arr.get(i);
+				obj = new JSONObject(obj.get("payload").toString());
+				mList.add(new Location("DBH "+obj.get("location")));
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+		return mList;
+	}
 }
