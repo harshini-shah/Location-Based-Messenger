@@ -115,10 +115,22 @@ public class Server {
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot send a message");
 				}
-
+				
+				// Add to database
 				int messageID = DBUtils.addTransaction(msg);
-				Utils.queueMessage(msg.field2, new Location(msg.field4), messageID);
-				ProbeManager.startProbeFor(msg.field2);
+				
+				// Field 2 has the receiver email IDs - Check if there are multiple ones
+				if (msg.field2.contains("|")) {
+				    String[] recipients = msg.field2.split("|");
+				    for (int i = 0; i < recipients.length; i++) {
+				        Utils.queueMessage(recipients[i].trim(), new Location(msg.field4), messageID);
+				        ProbeManager.startProbeFor(recipients[i].trim());
+				    }
+				} else {
+	                Utils.queueMessage(msg.field2, new Location(msg.field4), messageID);
+	                ProbeManager.startProbeFor(msg.field2);
+				}
+				
 				client.close();
 
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
