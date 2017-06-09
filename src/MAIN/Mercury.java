@@ -13,6 +13,7 @@ public class Mercury {
 		Message msg;
 
 		public MercuryQueueObject(ArrayList<Integer> ids, Message m) {
+		    System.out.println("Mercury started for message id " + ids.get(0));
 			msgIds = ids;
 			msg = m;
 		}
