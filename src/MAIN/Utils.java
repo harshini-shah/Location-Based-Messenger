@@ -120,6 +120,9 @@ public class Utils {
 		ArrayList<QueueObject> messageQueue = getQueueForUser(userEmail);
 		Object messageQueueMutex = getMutexForUser(userEmail);
 		HashSet<Location> currentLocationList = getCurrentLocationForUser(userEmail);
+		for (Location loc : currentLocationList) {
+		    System.out.println(loc);
+		}
 		ArrayList<Integer> messageIdList = new ArrayList<Integer>();
 		ArrayList<Integer> ackMessages = new ArrayList<Integer>();
 
@@ -150,7 +153,8 @@ public class Utils {
 							i++;
 					}
 				} else if (obj.getStatus() == STATUS.TOBESENT && obj.getLocation().isEqualImpl(currentLocationList)) {
-					messageIdList.add(obj.getMessageID());
+					
+				    messageIdList.add(obj.getMessageID());
 					obj.updateStatus(STATUS.WAITING);
 					delivered = true;
 					i++;
@@ -172,9 +176,24 @@ public class Utils {
 			}
 		}
 
+//		System.out.print("The ack message lists is");
+//		for (int ii : ackMessages) {
+//		    System.out.print(ii + " ");
+//		}
+//		
+//		System.out.println();
+//		System.out.print("The message lists is");
+//        for (int ii : messageIdList) {
+//            System.out.print(ii + " ");
+//        }
+        
 		if (delivered) {
 			Message msg = DBUtils.getMessagesFromDB(ackMessages, userEmail);
-			Mercury.addRequest(ackMessages, msg);
+			if (msg != null) {
+			    msg.msgType = Message.MsgType.ACK;
+	            Mercury.addRequest(ackMessages, msg);
+			}
+			
 
 			if (!shouldIDeliver)
 				return messageIdList;
@@ -215,6 +234,8 @@ public class Utils {
 	 * depending on whether the message was received or not.
 	 */
 	public static boolean sendMessage(Message message) {
+	    System.out.println("Message being sent is " + message.toString());
+	    
 		Socket socket = null;
 		try {
 			socket = new Socket(onlineUsers.get(message.field1).getIPAddress(), CLIENT_PORT_NUMBER);

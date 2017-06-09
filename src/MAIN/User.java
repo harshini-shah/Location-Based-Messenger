@@ -1,6 +1,7 @@
 package MAIN;
 
 import java.net.InetAddress;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.HashSet;
 
@@ -15,10 +16,15 @@ public class User {
 	private String mUserEmail;
 	private InetAddress mIpAddress;
 
-	public User(String userEmail, InetAddress ipAddress) {
-		this.mUserEmail = userEmail;
-		this.mIpAddress = ipAddress;
-	}
+    public User(String userEmail, InetAddress ipAddress) {
+        this.mUserEmail = userEmail;
+        this.mIpAddress = ipAddress;
+        try {
+            mLastSearchedTime = Utils.mDateFormat.parse("2017-06-04 12:22:23");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+    }
 
 	protected HashSet<Location> getCurrLocationList() {
 		/* Go to TIPPERS and get the locations */
