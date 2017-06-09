@@ -287,36 +287,23 @@ public class DBUtils {
         return transactionID;
     }
     
-    public static boolean checkUser(String userEmail) {
-        try {
-            stmt = conn.createStatement();
-
-            String sql = "SELECT id FROM USERS " + "WHERE UserEmail = '" + userEmail + "'";
-            ResultSet rs = stmt.executeQuery(sql);
-            return rs.next();
-        } catch (SQLException se) {
-            se.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-    
-    public static boolean checkPassword(String userEmail, String password) {
+    public static String checkUser(String userEmail) {
         try {
             stmt = conn.createStatement();
 
             String sql = "SELECT Password FROM USERS " + "WHERE UserEmail = '" + userEmail + "'";
             ResultSet rs = stmt.executeQuery(sql);
-            while (rs.next()) {
-                return password.equals(rs.getString("Password"));
+            if (!rs.next()) {
+                return null;
+            } else {
+                return rs.getString("Password");
             }
         } catch (SQLException se) {
             se.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return false;
+        return null;
     }
     
     /*TODO: made id arraylist*/
@@ -353,6 +340,11 @@ public class DBUtils {
      * Assumes that all the recipients are the same - No error checking done
      */
     public static Message getMessagesFromDB(ArrayList<Integer> messageIdList, String userEmail) {
+
+        if (messageIdList == null || messageIdList.isEmpty() || userEmail == null) {
+            return null;
+        }
+
         Message message = new Message();
         
         String field3 = "";

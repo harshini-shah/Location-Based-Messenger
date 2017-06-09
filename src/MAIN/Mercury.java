@@ -20,6 +20,10 @@ public class Mercury {
 
 	public static void addRequest(ArrayList<Integer> msgIdList, Message request) {
 
+	    if (request == null || msgIdList == null || msgIdList.isEmpty()) {
+	        return;
+	    }
+	    
 		synchronized (mutex) {
 			mRequestQueue.add(new MercuryQueueObject(msgIdList, request));
 			mutex.notifyAll();
@@ -62,14 +66,16 @@ public class Mercury {
 						if (delivered && mMercuryObj.msg.msgType != Message.MsgType.ACK) {
 							ProbeManager.addDeliveryNotice(mMercuryObj.msg.field1, i);
 							String users[] = mMercuryObj.msg.field4.split("\\|");
+							String messages[] = mMercuryObj.msg.field3.split("\\|");
+							
 							for (int x = 0; x < users.length; x++) {
 								Message msg = new Message();
 								msg.msgType = Message.MsgType.ACK;
 								msg.field1 = "SERVER";
 								msg.field2 = users[x].trim();
-								msg.field3 = "Message " + mMercuryObj.msg.field3 + " delivered to "
+								msg.field3 = "Message: " + messages[x].trim() + " - has been delivered to "
 										+ mMercuryObj.msg.field1;
-								Utils.queueMessage(msg.field2, null, DBUtils.addTransaction(msg));
+								Utils.queueMessage(msg.field2, null, DBUtils.addTransaction(msg));								
 								ProbeManager.startProbeFor(msg.field2);
 							}
 						} else if (mMercuryObj.msg.msgType != Message.MsgType.ACK)
