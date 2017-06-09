@@ -16,29 +16,23 @@ public class Server {
 
 	public Server(int port) throws Exception {
 		/* Creates a listening */
-	    //DBUtils.createConnection();
+
 	    DBUtils.cleanup();
 	    DBUtils.createDatabase();
 	    DBUtils.populateUsersTable("src/Test/DummyUsers.csv");
         DBUtils.populateDummyUsersTable("src/Test/Dummy_users.csv");
         DBUtils.createTransactionsTable();
- 
-        String roomNos = "TRUE|"+Utils.getRoomNos();
+
+		String roomNos = "TRUE | " + Utils.getRoomNos();
 
 		ServerSocket server = new ServerSocket(port);
-		//server.setSoTimeout(700000);
 
 		while (true) {
-			Socket client = server.accept(); // Accepts connection request from
-												// client
+			Socket client = server.accept();
+			System.out.println("Accepted connection request from " + client.getInetAddress());
 
-			System.out.println("Accepted connection request from " + client.getInetAddress()); // Prints
-
-			// Get the input and output streams for the socket
-            ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());
-			
+            ObjectOutputStream out = new ObjectOutputStream(client.getOutputStream());			
 			ObjectInputStream in = new ObjectInputStream(client.getInputStream());
-			
 			
 			Message msg = null;
 			String userEmail = null;
@@ -54,8 +48,11 @@ public class Server {
 
 				/* Case to update the IP of the User */
 				userEmail = msg.field1;
-				if(Utils.isUserOnline(msg.field1))
-					Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
+				if (Utils.isUserOnline(msg.field1))
+					Utils.updateIPForUser(userEmail, client.getInetAddress());
+				else
+					System.out.println("ERROR: Offline User trying to UPDATE IP");
+
 			} else if (msg.msgType == Message.MsgType.LOGIN_MSG) {
 				/*
 				 * Handle a Login Required
@@ -66,9 +63,9 @@ public class Server {
 			        out.writeObject(msg);
                     out.flush();
                     client.close();
-			    } else {
-			        Utils.logUserOn(userEmail, new User(userEmail,client.getInetAddress(), Utils.CLIENT_PORT_NUMBER));
-			        boolean sendEmptyAffirmation = false;
+				} else {
+					Utils.logUserOn(userEmail, new User(userEmail, client.getInetAddress()));
+					boolean sendEmptyAffirmation = false;
 	                if (Utils.messageQueueForUserExists(userEmail)) {
 	                    /**
 	                     * CREATE MSG OBJ

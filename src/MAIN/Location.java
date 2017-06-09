@@ -1,4 +1,7 @@
 package MAIN;
+
+import java.util.HashSet;
+
 /*
  * This is the location that can be specified by the user. For now, the user can only specify a string
  * which will represent the room number of Donald Bren. Later, this class can be modified by giving the
@@ -8,24 +11,23 @@ package MAIN;
  */
 public class Location {
 	private String roomNum;
-	
-	public enum Distance {VERY_NEAR,
-	    NEAR,
-	    FAR,
-	    VERY_FAR,
-	    };
+
+	public enum Distance {
+		VERY_NEAR, NEAR, FAR, VERY_FAR,
+	};
+
 	/* Have added this for future Scalability */
 	private boolean isGPS = false;
 	public Distance distance;
 
-	Location (String roomNum) {
-		/*To be used for DBH*/
+	public Location(String roomNum) {
+		/* To be used for DBH */
 		this.roomNum = roomNum;
 		this.distance = Distance.VERY_FAR;
 	}
-	
-	Location () {
-		/*To be used for GPS*/
+
+	Location() {
+		/* To be used for GPS */
 		isGPS = true;
 	}
 
@@ -33,23 +35,37 @@ public class Location {
 		return roomNum;
 	}
 
-	/* This is to check if two given locations are same or not. */
 	@Override
-	public boolean equals(Object obj) {
-		return isEqualImpl((Location) obj);
+	public int hashCode() {
+		return roomNum.hashCode();
 	}
 
-	public boolean isEqualImpl(Location loc) {
+	@Override
+	public boolean equals(Object obj) {
+		if (isGPS || !(obj instanceof Location))
+			return false;
+
+		Location loc = (Location) obj;
+		return roomNum.equals(loc.roomNum);
+	}
+
+	@Override
+	public String toString() {
+		return roomNum;
+	}
+
+	public boolean isEqualImpl(HashSet<Location> locationList) {
 		if (isGPS)
 			return false;
-		return loc.roomNum.equals(roomNum);
+
+		return locationList.contains(this);
 	}
-	
+
 	/*
-	 * Implement the logic for comparison of two Location objects,
-	 * and depending on the result, return the right value of 'Distance'
+	 * Implement the logic for comparison of two Location objects, and depending
+	 * on the result, return the right value of 'Distance'
 	 */
-	public Distance getDistance(Location location) {
-	    return Distance.VERY_NEAR;
+	public Distance getDistance(HashSet<Location> locationlist) {
+		return Distance.VERY_NEAR;
 	}
 }
