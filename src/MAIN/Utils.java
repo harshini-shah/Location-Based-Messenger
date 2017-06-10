@@ -26,7 +26,7 @@ import MAIN.Location.Distance;
 import MAIN.QueueObject.STATUS;
 
 public class Utils {
-	public static boolean TEST_MODE = false;
+	public static boolean TEST_MODE = true;
 	public static int SERVER_PORT_NUMBER = 6066;
 	public static int CLIENT_PORT_NUMBER = 6068;
 	private static String prefix = "\"name\":\"";
@@ -279,9 +279,9 @@ public class Utils {
 				if (state == prefix.length()) {
 					if (response.charAt(i) == termination) {
 						if (list.length() == 0)
-							list = token;
+							list = "DBH "+token;
 						else
-							list += " | " + token;
+							list += " | " + "DBH "+token;
 						state = 0;
 						token = "";
 					} else

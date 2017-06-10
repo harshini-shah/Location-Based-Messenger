@@ -103,6 +103,7 @@ public class Server {
 			} else if (msg.msgType == Message.MsgType.LOGOFF_MSG) {
 				/* handle log out */
 				userEmail = msg.field1;
+				
 				if (!Utils.isUserOnline(userEmail)) {
 					System.out.println("ERROR: You are not logged on yet so cannot log off");
 				} else {
