@@ -1,0 +1,26 @@
+1. Log Harshini In
+expected - welcome | no new Messages 
+
+2. Send "Hello" at DBH 5055 to Vignesh
+expected - Message to Vignesh from Harshini Queued
+
+3. Send "Wassup" at DBH 1011 to Vignesh
+expected - Message to Vignesh from Harshini Queued
+
+4. Send "Cool" at DBH 2011 to Vignesh
+expected - Message to Vignesh from Harshini Queued
+ 
+5. Send "Cool Done" at DBH 2011 to Vignesh
+expected - Message to Vignesh from Harshini Queued
+
+6. Log Harshini Off
+expected - Bye
+
+7. Log Vignesh at DBH 5055
+expected - welcome | There is a message from Harshini - "Hello"
+
+8. Change Vignesh Location to DBH 1011
+expected - Message from Harshini - Wassup
+
+9. Change Vignesh Location to DBH 2011
+expected - Message from Harshini - Cool | Message from Harshini - Cool Done
