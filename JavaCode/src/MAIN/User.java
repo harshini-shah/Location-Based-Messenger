@@ -9,12 +9,12 @@ import java.util.HashSet;
  * TODO : Add some field which can be used to connect to the user later. (while he is still logged on) 
  */
 public class User {
-	private static String basic = "http://sensoria.ics.uci.edu:8001/semanticobservation/get?requestor_id=primal@uci.edu&service_id=1&subject_id=";
-	private static String startTime = "&type=1&start_timestamp=";
-	private HashSet<Location> currLocationList;
-	private Date mLastSearchedTime;
-	private String mUserEmail;
-	private InetAddress mIpAddress;
+    private static String basic = "http://sensoria.ics.uci.edu:8001/semanticobservation/get?requestor_id=primal@uci.edu&service_id=1&subject_id=";
+    private static String startTime = "&type=1&start_timestamp=";
+    private HashSet<Location> currLocationList;
+    private Date mLastSearchedTime;
+    private String mUserEmail;
+    private InetAddress mIpAddress;
 
     public User(String userEmail, InetAddress ipAddress) {
         this.mUserEmail = userEmail;
@@ -26,19 +26,19 @@ public class User {
         }
     }
 
-	protected HashSet<Location> getCurrLocationList() {
-		/* Go to TIPPERS and get the locations */
-		currLocationList = Utils.getDBHLocationListForUrl(
-				basic + mUserEmail + startTime + (Utils.mDateFormat.format(mLastSearchedTime)).replaceAll(" ", "%20"));
-		mLastSearchedTime = new Date();
-		return currLocationList;
-	}
+    protected HashSet<Location> getCurrLocationList() {
+        /* Go to TIPPERS and get the locations */
+        currLocationList = Utils.getDBHLocationListForUrl(
+                basic + mUserEmail + startTime + (Utils.mDateFormat.format(mLastSearchedTime)).replaceAll(" ", "%20"));
+        mLastSearchedTime = new Date();
+        return currLocationList;
+    }
 
-	protected void updateIP(InetAddress ip) {
-		mIpAddress = ip;
-	}
+    protected void updateIP(InetAddress ip) {
+        mIpAddress = ip;
+    }
 
-	protected InetAddress getIPAddress() {
-		return this.mIpAddress;
-	}
+    protected InetAddress getIPAddress() {
+        return this.mIpAddress;
+    }
 }
