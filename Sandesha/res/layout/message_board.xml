@@ -8,12 +8,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="SEND MESSAGE" />
-    
+        android:text="SEND MESSAGE"
+        android:textSize="20dp" />
+
     <TextView
         android:id="@+id/inputMessageLabel"
         android:layout_width="match_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@id/sendMessageButton" />
-    
+        android:layout_above="@id/sendMessageButton"
+        android:textSize="20dp" />
+
 </RelativeLayout>

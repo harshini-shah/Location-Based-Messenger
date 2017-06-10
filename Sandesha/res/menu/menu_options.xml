@@ -3,7 +3,7 @@
 
     <item
         android:id="@+id/log_out"
-        android:title="LOG OFFF">
+        android:title="@string/log_off">
     </item>
 
 </menu>

@@ -9,7 +9,7 @@ import java.net.SocketException;
 
 import MAIN.Message;
 import MAIN.Utils;
-import android.widget.TextView;
+import android.os.Handler;
 
 public class NotificationManager extends Thread {
 
@@ -17,12 +17,12 @@ public class NotificationManager extends Thread {
 	private ObjectInputStream inputStream;
 	private ObjectOutputStream outputStream;
 	private boolean keepAlive;
-	private TextView mTextView;
+	private Handler mHandler;
 
-	public NotificationManager(String user_id, TextView tv) {
+	public NotificationManager(String user_id, Handler h) {
 		this.user_id = user_id;
 		keepAlive = true;
-		mTextView = tv;
+		mHandler = h;
 	}
 
 	public void down() {
@@ -49,6 +49,7 @@ public class NotificationManager extends Thread {
 		while (keepAlive) {
 			try {
 				Socket test_socket = wait.accept();
+				android.os.Message androidMsg = android.os.Message.obtain();
 				System.out.println("Client Receiver got request from Server Yayy ~!!");
 				outputStream = new ObjectOutputStream(test_socket.getOutputStream());
 				inputStream = new ObjectInputStream(test_socket.getInputStream());
@@ -57,20 +58,21 @@ public class NotificationManager extends Thread {
 				if (fromServer.msgType == Message.MsgType.NOTIFICATION && fromServer.field1.equals(user_id)) {
 					String[] msg_split = fromServer.field3.split("\\|");
 					String[] sender_split = fromServer.field4.split("\\|");
+					String fS ="";
 					for (int i = 0; i < msg_split.length; i++) {
-						String text = mTextView.getText().toString();
-						text += "\n" + "MESSAGE = " + msg_split[i] + "\nFROM = " + sender_split[i];
-						mTextView.setText(text);
+						fS += "MESSAGE = " + msg_split[i]+"\n"+"FROM = " + sender_split[i];
 						System.out.println("MESSAGE = " + msg_split[i]);
 						System.out.println("FROM = " + sender_split[i]);
 					}
+					androidMsg.obj = fS;
+					androidMsg.what = 1;
 				} else if (fromServer.msgType == Message.MsgType.ACK && fromServer.field1.equals(user_id)) {
-					String text = mTextView.getText().toString();
-					text += "\nACK = " + fromServer.field3;
-					mTextView.setText(text);
+					androidMsg.obj = "\nACK = " + fromServer.field3;
+					androidMsg.what = 1;
 					System.out.println("ACK = " + fromServer.field3);
 				} else
 					System.out.println("We have an unrecognized message from Server " + fromServer);
+				mHandler.sendMessage(androidMsg);
 			} catch (SocketException se) {
 				System.out.println("Asked to Kill Client Recieve !");
 			} catch (IOException e) {

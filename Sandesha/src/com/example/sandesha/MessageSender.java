@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 public class MessageSender extends Activity {
 
@@ -40,6 +41,7 @@ public class MessageSender extends Activity {
 			@Override
 			public void onClick(View v) {
 				String roomNo = mRoomNos.getSelectedItem().toString();
+				Toast.makeText(getApplicationContext(), "ROOM NO IS "+roomNo, Toast.LENGTH_LONG).show();
 				String users = mReceiptentNames.getText().toString();
 				System.out.println(roomNo + "  " + users);
 				sendMessage(roomNo, users, message.getText().toString());
@@ -50,16 +52,16 @@ public class MessageSender extends Activity {
 	private void sendMessage(String roomNo, String users, String text_msg) {
 		Message msg = new Message();
 		String temp[] = users.split(",");
-		String r_id = temp[0];
+		String r_id = temp[0].trim();
 
 		for (int i = 1; i < temp.length; i++)
-			r_id = " | " + temp[i];
+			r_id += " | " + temp[i].trim();
 
 		msg.msgType = MsgType.SEND_MSG;
-		msg.field1 = ClientUtils.userName;
+		msg.field1 = ClientUtils.userName.trim();
 		msg.field2 = r_id;
-		msg.field3 = text_msg;
-		msg.field4 = roomNo;
+		msg.field3 = text_msg.trim();
+		msg.field4 = roomNo.trim();
 		
 		Socket test_socket;
 		try {
