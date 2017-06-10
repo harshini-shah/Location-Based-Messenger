@@ -279,9 +279,9 @@ public class Utils {
 				if (state == prefix.length()) {
 					if (response.charAt(i) == termination) {
 						if (list.length() == 0)
-							list = token;
+							list = "DBH " + token;
 						else
-							list += " | " + token;
+							list += " | " + "DBH " + token;
 						state = 0;
 						token = "";
 					} else
